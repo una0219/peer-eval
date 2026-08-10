@@ -216,7 +216,17 @@ const RATERS = [
 
 const ALL_NAMES = [...PEOPLE.map(p => p.name), ...RATERS].sort();
 const PEOPLE_NAMES = new Set(PEOPLE.map(p => p.name));
+const PEOPLE_IDS = new Set(PEOPLE.map(p => p.id));
 const RATER_SET = new Set(RATERS);
+
+// Categorize a score row: 'mutual' | 'full' | 'unknown'
+function classifyRow(r) {
+  if (r.rater_name && PEOPLE_NAMES.has(r.rater_name)) return 'mutual';
+  if (r.rater_name && RATER_SET.has(r.rater_name)) return 'full';
+  // Fallback: check rater_id for known people
+  if (r.rater_id && PEOPLE_IDS.has(r.rater_id)) return 'mutual';
+  return 'unknown';
+}
 
 const ADMIN_NAME = '张思浩';
 const ADMIN_ID = '000000';
@@ -252,7 +262,7 @@ function isValidSid(id) { return /^(25020041|24020041)\d{3}$/.test(id); }
 function getCompletion(rows) {
   const doneIds = new Set();
   const idToName = {};
-  rows.forEach(r => { doneIds.add(r.rater_id); if (r.rater_name) idToName[r.rater_id] = r.rater_name; });
+  rows.forEach(r => { doneIds.add(r.rater_id); idToName[r.rater_id] = r.rater_name || r.rater_id; });
   const isDone = name => Object.entries(idToName).some(([id, n]) => n === name && doneIds.has(id));
   return { doneIds, idToName, isDone };
 }
@@ -367,23 +377,23 @@ async function renderAdmin1() {
 
   // === 互评得分 ===
   h += '<h2>📊 互评得分</h2>';
-  h += '<table class="score-table"><tr><th>姓名</th><th>评分人数</th><th>总分</th><th>平均分</th></tr>';
+  h += '<table class="score-table"><tr><th>姓名</th><th>评分人数</th><th>平均分</th></tr>';
   PEOPLE.forEach(p => {
-    const scores = rows.filter(r => r.target_id === p.id && PEOPLE_NAMES.has(r.rater_name));
+    const scores = rows.filter(r => r.target_id === p.id && classifyRow(r) === 'mutual');
     const total = scores.reduce((s,r)=>s+r.score,0);
     const avg = scores.length ? (total/scores.length).toFixed(2) : '—';
-    h += '<tr><td>'+p.name+'</td><td>'+scores.length+'</td><td class="highlight">'+(scores.length?total:'—')+'</td><td class="highlight">'+avg+'</td></tr>';
+    h += '<tr><td>'+p.name+'</td><td>'+scores.length+'人</td><td class="highlight">'+(scores.length?avg:'—')+'</td></tr>';
   });
   h += '</table>';
 
   // === 全评得分 ===
   h += '<h2>📊 全评得分</h2>';
-  h += '<table class="score-table"><tr><th>姓名</th><th>评分人数</th><th>总分</th><th>平均分</th></tr>';
+  h += '<table class="score-table"><tr><th>姓名</th><th>评分人数</th><th>平均分</th></tr>';
   PEOPLE.forEach(p => {
-    const scores = rows.filter(r => r.target_id === p.id && RATER_SET.has(r.rater_name));
+    const scores = rows.filter(r => r.target_id === p.id && classifyRow(r) === 'full');
     const total = scores.reduce((s,r)=>s+r.score,0);
     const avg = scores.length ? (total/scores.length).toFixed(2) : '—';
-    h += '<tr><td>'+p.name+'</td><td>'+scores.length+'</td><td class="highlight">'+(scores.length?total:'—')+'</td><td class="highlight">'+avg+'</td></tr>';
+    h += '<tr><td>'+p.name+'</td><td>'+scores.length+'人</td><td class="highlight">'+(scores.length?avg:'—')+'</td></tr>';
   });
   h += '</table>';
 
@@ -399,28 +409,29 @@ async function renderAdmin2() {
   let h = '';
   PEOPLE.forEach(p => {
     const all = rows.filter(r => r.target_id === p.id);
-    const mutual = all.filter(r => PEOPLE_NAMES.has(r.rater_name));
-    const full = all.filter(r => RATER_SET.has(r.rater_name));
+    const label = r => r.rater_name || r.rater_id;
+    const mutual = all.filter(r => classifyRow(r) === 'mutual');
+    const full = all.filter(r => classifyRow(r) === 'full');
     const total = all.reduce((s,r)=>s+r.score,0);
     const avg = all.length ? (total/all.length).toFixed(2) : null;
 
     h += '<div class="person-card" onclick="this.classList.toggle(\'open\')">';
     h += '<div class="card-header">';
     h += '<h4>'+p.name+' <span style="font-weight:400;color:#aaa;font-size:12px;">'+p.id+'</span></h4>';
-    h += '<span class="card-score">'+ (all.length ? total+' 分' : '—') +'</span>';
+    h += '<span class="card-score">'+ (all.length ? avg+' 分' : '—') +'</span>';
     h += '<span class="card-arrow">▼</span></div>';
     h += '<div class="card-detail">';
     if (!all.length) { h += '<div class="no-score">暂无评分</div>'; }
     else {
-      h += '<div><b>互评分数：</b>';
-      if (mutual.length) { mutual.forEach((r,i)=>{ h += r.rater_name+'：'+r.score+' 分'; if (i<mutual.length-1) h += '，'; }); }
+      h += '<div><b>互评：</b>';
+      if (mutual.length) { mutual.forEach((r,i)=>{ h += label(r)+'：'+r.score+' 分'; if (i<mutual.length-1) h += '，'; }); }
       else h += '<span class="no-score">暂无</span>';
       h += '</div>';
-      h += '<div style="margin-top:4px;"><b>全评分数：</b>';
-      if (full.length) { full.forEach((r,i)=>{ h += r.rater_name+'：'+r.score+' 分'; if (i<full.length-1) h += '，'; }); }
+      h += '<div style="margin-top:4px;"><b>全评：</b>';
+      if (full.length) { full.forEach((r,i)=>{ h += label(r)+'：'+r.score+' 分'; if (i<full.length-1) h += '，'; }); }
       else h += '<span class="no-score">暂无</span>';
       h += '</div>';
-      h += '<div class="detail-avg">综合平均分：'+avg+'（互评 '+mutual.length+' 人 + 全评 '+full.length+' 人）</div>';
+      h += '<div class="detail-avg">平均分：'+avg+'（共 '+all.length+' 人评分，总分 '+total+'）</div>';
     }
     h += '</div></div>';
   });
