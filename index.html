@@ -268,8 +268,19 @@ function isValidSid(id) { return /^(25020041|24020041)\d{3}$/.test(id); }
 function getCompletion(rows) {
   const doneIds = new Set();
   const idToName = {};
-  rows.forEach(r => { doneIds.add(r.rater_id); idToName[r.rater_id] = r.rater_name || r.rater_id; });
-  const isDone = name => Object.entries(idToName).some(([id, n]) => n === name && doneIds.has(id));
+  rows.forEach(r => {
+    doneIds.add(r.rater_id);
+    idToName[r.rater_id] = r.rater_name || ID_TO_NAME[r.rater_id] || r.rater_id;
+  });
+  const isDone = name => {
+    for (const [id, n] of Object.entries(idToName)) {
+      if (n === name && doneIds.has(id)) return true;
+    }
+    // Also check: this name's known ID has scores
+    const knownId = PEOPLE.find(p => p.name === name)?.id;
+    if (knownId && doneIds.has(knownId)) return true;
+    return false;
+  };
   return { doneIds, idToName, isDone };
 }
 
