@@ -147,7 +147,13 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
+// ===== SUPABASE =====
+const SUPABASE_URL = 'https://tcqwzumktgjyclnmotgb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjcXd6dW1rdGdqeWNsbm1vdGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzNDg1ODYsImV4cCI6MjEwMTkyNDU4Nn0.G0JcfU_W70q5HHUkYBzyKGH6i7tOFeEIYz9StZN1VoQ';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 // ===== DATA =====
 const PEOPLE = [
   { name: '程胜杰', id: '25020041012' },
@@ -191,28 +197,38 @@ function findPerson(name, id) {
   return PEOPLE.find(p => p.name === name.trim() && p.id === id.trim());
 }
 
-// ===== API =====
+// ===== SUPABASE API =====
 async function apiGetAllScores() {
-  const res = await fetch('/api/scores');
-  if (!res.ok) throw new Error('获取数据失败');
-  return res.json();
+  const { data, error } = await supabase.from('scores').select('*');
+  if (error) throw new Error(error.message);
+  // Transform rows → { rater_id: { target_id: score, ... }, ... }
+  const result = {};
+  for (const row of data) {
+    if (!result[row.rater_id]) result[row.rater_id] = {};
+    result[row.rater_id][row.target_id] = row.score;
+  }
+  return result;
 }
 
 async function apiGetMyScores(raterId) {
-  const res = await fetch('/api/scores/' + raterId);
-  if (!res.ok) throw new Error('获取数据失败');
-  return res.json();
+  const { data, error } = await supabase.from('scores').select('*').eq('rater_id', raterId);
+  if (error) throw new Error(error.message);
+  const result = {};
+  for (const row of data) {
+    result[row.target_id] = row.score;
+  }
+  return result;
 }
 
 async function apiSaveScores(raterId, scores) {
-  const res = await fetch('/api/scores', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ rater_id: raterId, scores: scores })
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.error || '保存失败');
-  return data;
+  const rows = Object.entries(scores).map(([target_id, score]) => ({
+    rater_id: raterId,
+    target_id: target_id,
+    score: score
+  }));
+  const { error } = await supabase.from('scores').upsert(rows, { onConflict: 'rater_id,target_id' });
+  if (error) throw new Error(error.message);
+  return { ok: true };
 }
 
 // ===== VIEW 1: LOGIN =====
