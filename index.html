@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>互评系统</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.container {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 720px;
+  padding: 40px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
+.subtitle { text-align: center; color: #888; margin-bottom: 32px; font-size: 14px; }
+
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #444; font-size: 14px; }
+.form-group input {
+  width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0;
+  border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s;
+}
+.form-group input:focus { border-color: #667eea; }
+
+.btn {
+  width: 100%; padding: 14px; border: none; border-radius: 8px;
+  font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff; margin-top: 8px;
+}
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.btn-secondary { background: #f0f0f0; color: #555; margin-top: 12px; }
+.btn-secondary:hover { background: #e4e4e4; }
+
+.error-msg { color: #e74c3c; text-align: center; margin-top: 12px; font-size: 14px; min-height: 20px; }
+
+.current-user {
+  background: #f8f4ff; border-left: 4px solid #667eea;
+  padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 24px;
+  font-size: 15px; color: #555;
+}
+
+.rating-list { max-height: 460px; overflow-y: auto; padding-right: 4px; }
+.rating-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+.rating-item:last-child { border-bottom: none; }
+.rating-item .info { flex: 1; min-width: 0; }
+.rating-item .name { font-weight: 600; color: #333; font-size: 15px; }
+.rating-item .sid { color: #999; font-size: 12px; }
+.rating-item input[type="number"] {
+  width: 100px; padding: 8px 12px; border: 2px solid #e0e0e0;
+  border-radius: 6px; font-size: 15px; text-align: center; outline: none; transition: border-color 0.2s;
+}
+.rating-item input[type="number"]:focus { border-color: #667eea; }
+.rating-item input[type="number"]::-webkit-inner-spin-button,
+.rating-item input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.rating-item input[type="number"] { -moz-appearance: textfield; }
+
+.success-icon { text-align: center; font-size: 64px; margin-bottom: 16px; }
+.success-text { text-align: center; font-size: 18px; color: #333; margin-bottom: 24px; }
+
+.person-card {
+  background: #fafafa; border-radius: 12px; padding: 20px;
+  margin-bottom: 16px; border: 1px solid #eee;
+}
+.person-card h3 { font-size: 16px; color: #333; margin-bottom: 6px; }
+.person-card .score-detail { font-size: 13px; color: #666; line-height: 1.8; }
+.person-card .avg { margin-top: 10px; font-size: 18px; font-weight: 700; color: #667eea; }
+.person-card .no-score { color: #ccc; font-style: italic; }
+
+.loading { text-align: center; color: #999; padding: 40px; font-size: 15px; }
+
+.rating-list::-webkit-scrollbar { width: 6px; }
+.rating-list::-webkit-scrollbar-track { background: transparent; }
+.rating-list::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="container" id="container">
+  <!-- View 1: Login -->
+  <div id="view-login">
+    <h1>📋 互评系统</h1>
+    <p class="subtitle">请输入您的姓名和学号以开始评分</p>
+    <div class="form-group">
+      <label for="login-name">姓名</label>
+      <input type="text" id="login-name" placeholder="请输入姓名" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label for="login-id">学号</label>
+      <input type="text" id="login-id" placeholder="请输入学号" autocomplete="off">
+    </div>
+    <button class="btn btn-primary" id="btn-login" onclick="handleLogin()">确 认</button>
+    <p class="error-msg" id="login-error"></p>
+  </div>
+
+  <!-- View 2: Rating -->
+  <div id="view-rating" style="display:none;">
+    <h1>📝 互评打分</h1>
+    <div class="current-user" id="current-user-info"></div>
+    <div class="rating-list" id="rating-list"><div class="loading">加载中…</div></div>
+    <button class="btn btn-primary" id="btn-submit" onclick="handleSubmit()">提交评分</button>
+    <button class="btn btn-secondary" onclick="goToLogin()">返回登录</button>
+    <p class="error-msg" id="rating-error"></p>
+  </div>
+
+  <!-- View 3: Complete -->
+  <div id="view-complete" style="display:none;">
+    <h1>✅ 评分完成</h1>
+    <div class="success-icon">🎉</div>
+    <p class="success-text">您的评分已成功提交到服务器！</p>
+    <button class="btn btn-primary" onclick="goToRating()">重新评分</button>
+    <button class="btn btn-secondary" onclick="goToLogin()">返回登录</button>
+  </div>
+
+  <!-- View 4: Admin -->
+  <div id="view-admin" style="display:none;">
+    <h1>🔧 管理员面板</h1>
+    <p class="subtitle">查看所有人的互评得分与平均分</p>
+    <div id="admin-content"><div class="loading">加载中…</div></div>
+    <button class="btn btn-secondary" onclick="goToLogin()">返回登录</button>
+  </div>
+</div>
+
+<script>
+// ===== DATA =====
+const PEOPLE = [
+  { name: '程胜杰', id: '25020041012' },
+  { name: '崔于悦', id: '25020041013' },
+  { name: '高子昂', id: '25020041024' },
+  { name: '海洋',   id: '25020041027' },
+  { name: '何宗泉', id: '25020041032' },
+  { name: '焦子健', id: '25020041036' },
+  { name: '兰萍瑞', id: '25020041038' },
+  { name: '楼庆同', id: '25020041060' },
+  { name: '樊于悦', id: '25020041019' },
+  { name: '官晓悠', id: '25020041026' },
+  { name: '李馨悦', id: '25020041043' },
+];
+
+const ADMIN_NAME = '张思浩';
+const ADMIN_ID = '000000';
+
+let currentUser = null;
+
+// ===== HELPERS =====
+function showView(viewId) {
+  ['view-login','view-rating','view-complete','view-admin'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById(viewId).style.display = 'block';
+  document.getElementById('container').style.animation = 'none';
+  document.getElementById('container').offsetHeight;
+  document.getElementById('container').style.animation = 'fadeIn 0.3s ease';
+}
+
+function goToLogin() {
+  currentUser = null;
+  document.getElementById('login-name').value = '';
+  document.getElementById('login-id').value = '';
+  document.getElementById('login-error').textContent = '';
+  showView('view-login');
+}
+
+function findPerson(name, id) {
+  return PEOPLE.find(p => p.name === name.trim() && p.id === id.trim());
+}
+
+// ===== API =====
+async function apiGetAllScores() {
+  const res = await fetch('/api/scores');
+  if (!res.ok) throw new Error('获取数据失败');
+  return res.json();
+}
+
+async function apiGetMyScores(raterId) {
+  const res = await fetch('/api/scores/' + raterId);
+  if (!res.ok) throw new Error('获取数据失败');
+  return res.json();
+}
+
+async function apiSaveScores(raterId, scores) {
+  const res = await fetch('/api/scores', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rater_id: raterId, scores: scores })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || '保存失败');
+  return data;
+}
+
+// ===== VIEW 1: LOGIN =====
+function handleLogin() {
+  const name = document.getElementById('login-name').value.trim();
+  const id = document.getElementById('login-id').value.trim();
+  const errEl = document.getElementById('login-error');
+
+  if (!name || !id) { errEl.textContent = '请输入姓名和学号'; return; }
+
+  if (name === ADMIN_NAME && id === ADMIN_ID) {
+    errEl.textContent = '';
+    showView('view-admin');
+    renderAdmin();
+    return;
+  }
+
+  const person = findPerson(name, id);
+  if (!person) { errEl.textContent = '姓名与学号不匹配，请重新输入'; return; }
+
+  currentUser = person;
+  errEl.textContent = '';
+  showView('view-rating');
+  renderRating();
+}
+
+// ===== VIEW 2: RATING =====
+async function renderRating() {
+  const others = PEOPLE.filter(p => p.id !== currentUser.id);
+  document.getElementById('current-user-info').textContent =
+    `当前评分人：${currentUser.name}（${currentUser.id}）`;
+
+  // 从服务器加载已有评分
+  let existingScores = {};
+  try { existingScores = await apiGetMyScores(currentUser.id); } catch (e) {}
+
+  const listEl = document.getElementById('rating-list');
+  listEl.innerHTML = others.map(p => `
+    <div class="rating-item">
+      <div class="info">
+        <div class="name">${p.name}</div>
+        <div class="sid">${p.id}</div>
+      </div>
+      <input type="number" id="score-${p.id}" min="0" max="100" step="1"
+             value="${existingScores[p.id] !== undefined ? existingScores[p.id] : ''}"
+             placeholder="0-100" inputmode="numeric">
+    </div>
+  `).join('');
+  document.getElementById('rating-error').textContent = '';
+}
+
+async function goToRating() {
+  showView('view-rating');
+  await renderRating();
+}
+
+async function handleSubmit() {
+  const others = PEOPLE.filter(p => p.id !== currentUser.id);
+  const errEl = document.getElementById('rating-error');
+  const btn = document.getElementById('btn-submit');
+  const newScores = {};
+
+  for (const p of others) {
+    const input = document.getElementById('score-' + p.id);
+    const val = input.value.trim();
+    if (val === '') { errEl.textContent = `请为 ${p.name} 打分`; input.focus(); return; }
+    const num = Number(val);
+    if (!Number.isInteger(num) || num < 0 || num > 100) {
+      errEl.textContent = `${p.name} 的分数须为 0-100 的整数`; input.focus(); return;
+    }
+    newScores[p.id] = num;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '提交中…';
+  errEl.textContent = '';
+
+  try {
+    await apiSaveScores(currentUser.id, newScores);
+    showView('view-complete');
+  } catch (e) {
+    errEl.textContent = '提交失败: ' + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '提交评分';
+  }
+}
+
+// ===== VIEW 4: ADMIN =====
+async function renderAdmin() {
+  const adminEl = document.getElementById('admin-content');
+
+  let allScores = {};
+  try { allScores = await apiGetAllScores(); } catch (e) {
+    adminEl.innerHTML = '<div class="loading">加载失败: ' + e.message + '</div>';
+    return;
+  }
+
+  let html = '';
+  PEOPLE.forEach(person => {
+    html += `<div class="person-card">`;
+    html += `<h3>${person.name} <span style="font-weight:400;color:#999;font-size:13px;">${person.id}</span></h3>`;
+
+    const received = [];
+    PEOPLE.forEach(rater => {
+      if (rater.id === person.id) return;
+      const raterScores = allScores[rater.id];
+      if (raterScores && raterScores[person.id] !== undefined) {
+        received.push({ raterName: rater.name, score: raterScores[person.id] });
+      }
+    });
+
+    if (received.length === 0) {
+      html += `<div class="score-detail no-score">暂无评分</div>`;
+    } else {
+      html += `<div class="score-detail">`;
+      received.forEach((r, i) => {
+        html += `${r.raterName}：${r.score} 分`;
+        if (i < received.length - 1) html += '，';
+      });
+      html += `</div>`;
+      const sum = received.reduce((s, r) => s + r.score, 0);
+      const avg = (sum / received.length).toFixed(2);
+      html += `<div class="avg">平均分：${avg}</div>`;
+    }
+    html += `</div>`;
+  });
+
+  adminEl.innerHTML = html;
+}
+</script>
+</body>
+</html>
