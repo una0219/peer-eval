@@ -37,11 +37,14 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
 
 .form-group { margin-bottom: 20px; }
 .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #444; font-size: 14px; }
-.form-group input {
+.form-group input,
+.form-group select {
   width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0;
   border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s;
+  background: #fff;
 }
-.form-group input:focus { border-color: #667eea; }
+.form-group input:focus,
+.form-group select:focus { border-color: #667eea; }
 
 .btn {
   width: 100%; padding: 14px; border: none; border-radius: 8px;
@@ -84,20 +87,68 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
 .success-icon { text-align: center; font-size: 64px; margin-bottom: 16px; }
 .success-text { text-align: center; font-size: 18px; color: #333; margin-bottom: 24px; }
 
-.person-card {
-  background: #fafafa; border-radius: 12px; padding: 20px;
-  margin-bottom: 16px; border: 1px solid #eee;
+/* Admin styles */
+.progress-bar-wrap {
+  background: #eee; border-radius: 10px; height: 24px;
+  margin-bottom: 8px; overflow: hidden;
 }
-.person-card h3 { font-size: 16px; color: #333; margin-bottom: 6px; }
-.person-card .score-detail { font-size: 13px; color: #666; line-height: 1.8; }
-.person-card .avg { margin-top: 10px; font-size: 18px; font-weight: 700; color: #667eea; }
-.person-card .no-score { color: #ccc; font-style: italic; }
+.progress-bar-fill {
+  height: 100%; border-radius: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: width 0.5s ease;
+}
+.progress-text {
+  text-align: center; font-size: 18px; font-weight: 700; color: #667eea; margin-bottom: 20px;
+}
+
+.rater-lists { margin-bottom: 20px; }
+.rater-section { margin-bottom: 10px; }
+.rater-section summary {
+  font-weight: 600; color: #555; cursor: pointer; padding: 8px 0;
+  font-size: 14px; user-select: none;
+}
+.rater-section .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.rater-section .tag {
+  display: inline-block; padding: 4px 10px; border-radius: 20px;
+  font-size: 12px; font-weight: 500;
+}
+.tag-done { background: #e8f5e9; color: #2e7d32; }
+.tag-pending { background: #fff3e0; color: #e65100; }
+
+.person-card {
+  background: #fafafa; border-radius: 12px; padding: 16px 20px;
+  margin-bottom: 12px; border: 1px solid #eee; cursor: pointer;
+  transition: all 0.2s; user-select: none;
+}
+.person-card:hover { border-color: #667eea; box-shadow: 0 2px 8px rgba(102,126,234,0.15); }
+.person-card .card-header {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.person-card .card-header h3 { font-size: 15px; color: #333; }
+.person-card .card-score {
+  font-size: 20px; font-weight: 700; color: #667eea;
+  white-space: nowrap; margin-left: 12px;
+}
+.person-card .card-detail {
+  display: none; margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid #eee; font-size: 13px; color: #666; line-height: 1.8;
+}
+.person-card.open .card-detail { display: block; }
+.person-card .card-arrow { font-size: 12px; color: #aaa; transition: transform 0.2s; }
+.person-card.open .card-arrow { transform: rotate(180deg); }
+.person-card .detail-avg {
+  margin-top: 6px; font-weight: 700; color: #444; font-size: 14px;
+}
+
+.no-score { color: #ccc; font-style: italic; }
 
 .loading { text-align: center; color: #999; padding: 40px; font-size: 15px; }
 
 .rating-list::-webkit-scrollbar { width: 6px; }
 .rating-list::-webkit-scrollbar-track { background: transparent; }
 .rating-list::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 3px; }
+
+.hint { font-size: 12px; color: #aaa; margin-top: 4px; }
 </style>
 </head>
 <body>
@@ -106,14 +157,17 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
   <!-- View 1: Login -->
   <div id="view-login">
     <h1>📋 互评系统</h1>
-    <p class="subtitle">请输入您的姓名和学号以开始评分</p>
+    <p class="subtitle">海技一班 · 班内互评</p>
     <div class="form-group">
       <label for="login-name">姓名</label>
-      <input type="text" id="login-name" placeholder="请输入姓名" autocomplete="off">
+      <select id="login-name">
+        <option value="">请选择您的姓名</option>
+      </select>
     </div>
     <div class="form-group">
       <label for="login-id">学号</label>
-      <input type="text" id="login-id" placeholder="请输入学号" autocomplete="off">
+      <input type="text" id="login-id" placeholder="请输入11位学号" autocomplete="off" inputmode="numeric" maxlength="11">
+      <div class="hint">25020041XXX 或 24020041XXX</div>
     </div>
     <button class="btn btn-primary" id="btn-login" onclick="handleLogin()">确 认</button>
     <p class="error-msg" id="login-error"></p>
@@ -133,7 +187,7 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
   <div id="view-complete" style="display:none;">
     <h1>✅ 评分完成</h1>
     <div class="success-icon">🎉</div>
-    <p class="success-text">您的评分已成功提交到服务器！</p>
+    <p class="success-text">您的评分已成功提交！</p>
     <button class="btn btn-primary" onclick="goToRating()">重新评分</button>
     <button class="btn btn-secondary" onclick="goToLogin()">返回登录</button>
   </div>
@@ -141,7 +195,7 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
   <!-- View 4: Admin -->
   <div id="view-admin" style="display:none;">
     <h1>🔧 管理员面板</h1>
-    <p class="subtitle">查看所有人的互评得分与平均分</p>
+    <p class="subtitle">班内互评进度与结果</p>
     <div id="admin-content"><div class="loading">加载中…</div></div>
     <button class="btn btn-secondary" onclick="goToLogin()">返回登录</button>
   </div>
@@ -152,7 +206,6 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
 const SUPABASE_URL = 'https://tcqwzumktgjyclnmotgb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjcXd6dW1rdGdqeWNsbm1vdGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzNDg1ODYsImV4cCI6MjEwMTkyNDU4Nn0.G0JcfU_W70q5HHUkYBzyKGH6i7tOFeEIYz9StZN1VoQ';
 
-// Direct REST API — no CDN dependency
 async function supabaseGet(path) {
   const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
     headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
@@ -176,6 +229,7 @@ async function supabaseUpsert(table, rows) {
 }
 
 // ===== DATA =====
+// 被评人（11人）
 const PEOPLE = [
   { name: '程胜杰', id: '25020041012' },
   { name: '崔于悦', id: '25020041013' },
@@ -190,10 +244,29 @@ const PEOPLE = [
   { name: '李馨悦', id: '25020041043' },
 ];
 
+// 评分人（27人 — 38人名单去除上述11人）
+const RATERS = [
+  '蔡丽华','曹哲','陈超祺','陈可可','陈瑞','陈晓曦','陈昀都','陈哲鸣',
+  '单歆博','丁铎航','丁世杰','段熙然','段泽昊','高邓鑫','高颢瑜',
+  '龚垚兴','韩雨辰','郝佳绮','何嘉怡','胡鑫慧','赖芳群','李宛佳泓',
+  '李想','李雨航','练一凡','林依然','张永俊'
+];
+
 const ADMIN_NAME = '张思浩';
 const ADMIN_ID = '000000';
 
-let currentUser = null;
+let currentUser = null; // { name, id }
+
+// Populate login dropdown
+(function initDropdown() {
+  const sel = document.getElementById('login-name');
+  RATERS.forEach(name => {
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    sel.appendChild(opt);
+  });
+})();
 
 // ===== HELPERS =====
 function showView(viewId) {
@@ -214,33 +287,26 @@ function goToLogin() {
   showView('view-login');
 }
 
-function findPerson(name, id) {
-  return PEOPLE.find(p => p.name === name.trim() && p.id === id.trim());
+function isValidStudentId(id) {
+  return /^(25020041|24020041)\d{3}$/.test(id);
 }
 
-// ===== SUPABASE API =====
-async function apiGetAllScores() {
-  const rows = await supabaseGet('scores?select=*');
-  const result = {};
-  for (const row of rows) {
-    if (!result[row.rater_id]) result[row.rater_id] = {};
-    result[row.rater_id][row.target_id] = row.score;
-  }
-  return result;
+// ===== API =====
+async function apiGetAllRows() {
+  return await supabaseGet('scores?select=*');
 }
 
 async function apiGetMyScores(raterId) {
   const rows = await supabaseGet('scores?rater_id=eq.' + encodeURIComponent(raterId) + '&select=*');
   const result = {};
-  for (const row of rows) {
-    result[row.target_id] = row.score;
-  }
+  for (const row of rows) result[row.target_id] = row.score;
   return result;
 }
 
-async function apiSaveScores(raterId, scores) {
+async function apiSaveScores(raterId, raterName, scores) {
   const rows = Object.entries(scores).map(([target_id, score]) => ({
     rater_id: raterId,
+    rater_name: raterName,
     target_id: target_id,
     score: score
   }));
@@ -250,12 +316,15 @@ async function apiSaveScores(raterId, scores) {
 
 // ===== VIEW 1: LOGIN =====
 function handleLogin() {
-  const name = document.getElementById('login-name').value.trim();
+  const nameEl = document.getElementById('login-name');
+  const name = nameEl.value.trim();
   const id = document.getElementById('login-id').value.trim();
   const errEl = document.getElementById('login-error');
 
-  if (!name || !id) { errEl.textContent = '请输入姓名和学号'; return; }
+  if (!name) { errEl.textContent = '请选择您的姓名'; return; }
+  if (!id) { errEl.textContent = '请输入学号'; return; }
 
+  // Admin
   if (name === ADMIN_NAME && id === ADMIN_ID) {
     errEl.textContent = '';
     showView('view-admin');
@@ -263,10 +332,15 @@ function handleLogin() {
     return;
   }
 
-  const person = findPerson(name, id);
-  if (!person) { errEl.textContent = '姓名与学号不匹配，请重新输入'; return; }
+  // Validate rater
+  if (!RATERS.includes(name)) {
+    errEl.textContent = '姓名不在评分人名单中'; return;
+  }
+  if (!isValidStudentId(id)) {
+    errEl.textContent = '学号格式错误，应为11位数字，以25020041或24020041开头'; return;
+  }
 
-  currentUser = person;
+  currentUser = { name: name, id: id };
   errEl.textContent = '';
   showView('view-rating');
   renderRating();
@@ -274,16 +348,14 @@ function handleLogin() {
 
 // ===== VIEW 2: RATING =====
 async function renderRating() {
-  const others = PEOPLE.filter(p => p.id !== currentUser.id);
   document.getElementById('current-user-info').textContent =
     `当前评分人：${currentUser.name}（${currentUser.id}）`;
 
-  // 从服务器加载已有评分
   let existingScores = {};
   try { existingScores = await apiGetMyScores(currentUser.id); } catch (e) {}
 
   const listEl = document.getElementById('rating-list');
-  listEl.innerHTML = others.map(p => `
+  listEl.innerHTML = PEOPLE.map(p => `
     <div class="rating-item">
       <div class="info">
         <div class="name">${p.name}</div>
@@ -303,12 +375,11 @@ async function goToRating() {
 }
 
 async function handleSubmit() {
-  const others = PEOPLE.filter(p => p.id !== currentUser.id);
   const errEl = document.getElementById('rating-error');
   const btn = document.getElementById('btn-submit');
   const newScores = {};
 
-  for (const p of others) {
+  for (const p of PEOPLE) {
     const input = document.getElementById('score-' + p.id);
     const val = input.value.trim();
     if (val === '') { errEl.textContent = `请为 ${p.name} 打分`; input.focus(); return; }
@@ -324,7 +395,7 @@ async function handleSubmit() {
   errEl.textContent = '';
 
   try {
-    await apiSaveScores(currentUser.id, newScores);
+    await apiSaveScores(currentUser.id, currentUser.name, newScores);
     showView('view-complete');
   } catch (e) {
     errEl.textContent = '提交失败: ' + e.message;
@@ -338,39 +409,87 @@ async function handleSubmit() {
 async function renderAdmin() {
   const adminEl = document.getElementById('admin-content');
 
-  let allScores = {};
-  try { allScores = await apiGetAllScores(); } catch (e) {
+  let allRows = [];
+  try { allRows = await apiGetAllRows(); } catch (e) {
     adminEl.innerHTML = '<div class="loading">加载失败: ' + e.message + '</div>';
     return;
   }
 
-  let html = '';
-  PEOPLE.forEach(person => {
-    html += `<div class="person-card">`;
-    html += `<h3>${person.name} <span style="font-weight:400;color:#999;font-size:13px;">${person.id}</span></h3>`;
+  // --- Who has completed? ---
+  const doneIds = new Set(allRows.map(r => r.rater_id));
+  // Map rater_id → rater_name (from scores)
+  const idToName = {};
+  allRows.forEach(r => { if (r.rater_name) idToName[r.rater_id] = r.rater_name; });
 
+  // For completed: we know idToName
+  const doneNames = [];
+  const pendingNames = [];
+  RATERS.forEach(name => {
+    // Check if any rater with this name has submitted
+    const found = Object.entries(idToName).some(([id, n]) => n === name && doneIds.has(id));
+    if (found) doneNames.push(name);
+    else pendingNames.push(name);
+  });
+
+  const doneCount = doneNames.length;
+  const total = RATERS.length;
+  const pct = Math.round((doneCount / total) * 100);
+
+  // --- Build HTML ---
+  let html = '';
+
+  // Progress
+  html += `<div class="progress-text">${doneCount} / ${total} 人已完成（${pct}%）</div>`;
+  html += `<div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>`;
+
+  // Completed & pending lists
+  html += `<div class="rater-lists">`;
+  html += `<details class="rater-section"><summary>✅ 已完成（${doneCount}人）</summary><div class="tags">`;
+  doneNames.forEach(n => html += `<span class="tag tag-done">${n}</span>`);
+  if (doneCount === 0) html += '<span style="color:#ccc;font-size:12px;">暂无</span>';
+  html += `</div></details>`;
+
+  html += `<details class="rater-section" open><summary>⏳ 未完成（${pendingNames.length}人）</summary><div class="tags">`;
+  pendingNames.forEach(n => html += `<span class="tag tag-pending">${n}</span>`);
+  if (pendingNames.length === 0) html += '<span style="color:#2e7d32;font-size:12px;">全部完成 🎉</span>';
+  html += `</div></details>`;
+  html += `</div>`;
+
+  // Per-person cards
+  html += `<h3 style="margin: 20px 0 12px; color:#555;">被评人得分</h3>`;
+
+  PEOPLE.forEach((person, idx) => {
+    // Gather scores for this person
     const received = [];
-    PEOPLE.forEach(rater => {
-      if (rater.id === person.id) return;
-      const raterScores = allScores[rater.id];
-      if (raterScores && raterScores[person.id] !== undefined) {
-        received.push({ raterName: rater.name, score: raterScores[person.id] });
+    allRows.forEach(row => {
+      if (row.target_id === person.id) {
+        received.push({ raterName: row.rater_name || row.rater_id, score: row.score });
       }
     });
 
+    const totalScore = received.reduce((s, r) => s + r.score, 0);
+    const avgScore = received.length > 0 ? (totalScore / received.length).toFixed(2) : null;
+
+    html += `<div class="person-card" onclick="this.classList.toggle('open')">`;
+    html += `<div class="card-header">`;
+    html += `<h3>${person.name} <span style="font-weight:400;color:#999;font-size:12px;">${person.id}</span></h3>`;
+    html += `<span class="card-score">${received.length > 0 ? totalScore + ' 分' : '—'}</span>`;
+    html += `<span class="card-arrow">▼</span>`;
+    html += `</div>`;
+
+    html += `<div class="card-detail">`;
     if (received.length === 0) {
-      html += `<div class="score-detail no-score">暂无评分</div>`;
+      html += `<div class="no-score">暂无评分</div>`;
     } else {
-      html += `<div class="score-detail">`;
+      html += `<div>`;
       received.forEach((r, i) => {
         html += `${r.raterName}：${r.score} 分`;
         if (i < received.length - 1) html += '，';
       });
       html += `</div>`;
-      const sum = received.reduce((s, r) => s + r.score, 0);
-      const avg = (sum / received.length).toFixed(2);
-      html += `<div class="avg">平均分：${avg}</div>`;
+      html += `<div class="detail-avg">平均分：${avgScore}（共 ${received.length} 人评分）</div>`;
     }
+    html += `</div>`;
     html += `</div>`;
   });
 
