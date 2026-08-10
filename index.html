@@ -6,66 +6,46 @@
 <title>互评系统</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
 }
-
 .container {
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-  width: 100%;
-  max-width: 720px;
-  padding: 40px;
-  animation: fadeIn 0.3s ease;
+  background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  width: 100%; max-width: 720px; padding: 40px; animation: fadeIn 0.3s ease;
 }
-
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
 h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
 .subtitle { text-align: center; color: #888; margin-bottom: 32px; font-size: 14px; }
-
 .form-group { margin-bottom: 20px; }
 .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #444; font-size: 14px; }
-.form-group input {
+.form-group input, .form-group select {
   width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0;
-  border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s;
+  border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s; background: #fff;
 }
-.form-group input:focus { border-color: #667eea; }
-
+.form-group input:focus, .form-group select:focus { border-color: #667eea; }
+.hint { font-size: 12px; color: #aaa; margin-top: 4px; }
 .btn {
   width: 100%; padding: 14px; border: none; border-radius: 8px;
   font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
 }
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: #fff; margin-top: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; margin-top: 8px;
 }
 .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
 .btn-primary:active { transform: translateY(0); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
 .btn-secondary { background: #f0f0f0; color: #555; margin-top: 12px; }
 .btn-secondary:hover { background: #e4e4e4; }
-
 .error-msg { color: #e74c3c; text-align: center; margin-top: 12px; font-size: 14px; min-height: 20px; }
-
 .current-user {
   background: #f8f4ff; border-left: 4px solid #667eea;
-  padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 24px;
-  font-size: 15px; color: #555;
+  padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 24px; font-size: 15px; color: #555;
 }
-
 .rating-list { max-height: 460px; overflow-y: auto; padding-right: 4px; }
 .rating-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
 .rating-item:last-child { border-bottom: none; }
@@ -80,21 +60,42 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
 .rating-item input[type="number"]::-webkit-inner-spin-button,
 .rating-item input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .rating-item input[type="number"] { -moz-appearance: textfield; }
-
 .success-icon { text-align: center; font-size: 64px; margin-bottom: 16px; }
 .success-text { text-align: center; font-size: 18px; color: #333; margin-bottom: 24px; }
-
-.person-card {
-  background: #fafafa; border-radius: 12px; padding: 20px;
-  margin-bottom: 16px; border: 1px solid #eee;
+.progress-bar-wrap { background: #eee; border-radius: 10px; height: 24px; margin-bottom: 8px; overflow: hidden; }
+.progress-bar-fill {
+  height: 100%; border-radius: 10px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); transition: width 0.5s ease;
 }
-.person-card h3 { font-size: 16px; color: #333; margin-bottom: 6px; }
-.person-card .score-detail { font-size: 13px; color: #666; line-height: 1.8; }
-.person-card .avg { margin-top: 10px; font-size: 18px; font-weight: 700; color: #667eea; }
-.person-card .no-score { color: #ccc; font-style: italic; }
-
+.progress-text { text-align: center; font-size: 18px; font-weight: 700; color: #667eea; margin-bottom: 20px; }
+.rater-lists { margin-bottom: 20px; }
+.rater-section { margin-bottom: 10px; }
+.rater-section summary {
+  font-weight: 600; color: #555; cursor: pointer; padding: 8px 0; font-size: 14px; user-select: none;
+}
+.rater-section .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.rater-section .tag { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+.tag-done { background: #e8f5e9; color: #2e7d32; }
+.tag-pending { background: #fff3e0; color: #e65100; }
+.person-card {
+  background: #fafafa; border-radius: 12px; padding: 16px 20px;
+  margin-bottom: 12px; border: 1px solid #eee; cursor: pointer;
+  transition: all 0.2s; user-select: none;
+}
+.person-card:hover { border-color: #667eea; box-shadow: 0 2px 8px rgba(102,126,234,0.15); }
+.person-card .card-header { display: flex; justify-content: space-between; align-items: center; }
+.person-card .card-header h3 { font-size: 15px; color: #333; }
+.person-card .card-score { font-size: 20px; font-weight: 700; color: #667eea; white-space: nowrap; margin-left: 12px; }
+.person-card .card-detail {
+  display: none; margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid #eee; font-size: 13px; color: #666; line-height: 1.8;
+}
+.person-card.open .card-detail { display: block; }
+.person-card .card-arrow { font-size: 12px; color: #aaa; transition: transform 0.2s; }
+.person-card.open .card-arrow { transform: rotate(180deg); }
+.person-card .detail-avg { margin-top: 6px; font-weight: 700; color: #444; font-size: 14px; }
+.no-score { color: #ccc; font-style: italic; }
 .loading { text-align: center; color: #999; padding: 40px; font-size: 15px; }
-
 .rating-list::-webkit-scrollbar { width: 6px; }
 .rating-list::-webkit-scrollbar-track { background: transparent; }
 .rating-list::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 3px; }
@@ -103,17 +104,19 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
 <body>
 
 <div class="container" id="container">
+
   <!-- View 1: Login -->
   <div id="view-login">
     <h1>📋 互评系统</h1>
-    <p class="subtitle">请输入您的姓名和学号以开始评分</p>
+    <p class="subtitle">海技一班 · 班内互评</p>
     <div class="form-group">
       <label for="login-name">姓名</label>
-      <input type="text" id="login-name" placeholder="请输入姓名" autocomplete="off">
+      <select id="login-name"><option value="">请选择您的姓名</option></select>
     </div>
     <div class="form-group">
       <label for="login-id">学号</label>
-      <input type="text" id="login-id" placeholder="请输入学号" autocomplete="off">
+      <input type="text" id="login-id" placeholder="请输入11位学号" autocomplete="off" inputmode="numeric" maxlength="11">
+      <div class="hint">25020041XXX 或 24020041XXX</div>
     </div>
     <button class="btn btn-primary" id="btn-login" onclick="handleLogin()">确 认</button>
     <p class="error-msg" id="login-error"></p>
@@ -133,7 +136,7 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
   <div id="view-complete" style="display:none;">
     <h1>✅ 评分完成</h1>
     <div class="success-icon">🎉</div>
-    <p class="success-text">您的评分已成功提交到服务器！</p>
+    <p class="success-text">您的评分已成功提交！</p>
     <button class="btn btn-primary" onclick="goToRating()">重新评分</button>
     <button class="btn btn-secondary" onclick="goToLogin()">返回登录</button>
   </div>
@@ -141,10 +144,11 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
   <!-- View 4: Admin -->
   <div id="view-admin" style="display:none;">
     <h1>🔧 管理员面板</h1>
-    <p class="subtitle">查看所有人的互评得分与平均分</p>
+    <p class="subtitle">班内互评进度与结果</p>
     <div id="admin-content"><div class="loading">加载中…</div></div>
     <button class="btn btn-secondary" onclick="goToLogin()">返回登录</button>
   </div>
+
 </div>
 
 <script>
@@ -152,7 +156,6 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
 const SUPABASE_URL = 'https://tcqwzumktgjyclnmotgb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjcXd6dW1rdGdqeWNsbm1vdGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzNDg1ODYsImV4cCI6MjEwMTkyNDU4Nn0.G0JcfU_W70q5HHUkYBzyKGH6i7tOFeEIYz9StZN1VoQ';
 
-// Direct REST API — no CDN dependency
 async function supabaseGet(path) {
   const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
     headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
@@ -160,15 +163,12 @@ async function supabaseGet(path) {
   if (!res.ok) throw new Error((await res.json()).message || res.statusText);
   return res.json();
 }
-
 async function supabaseUpsert(table, rows) {
   const res = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
     method: 'POST',
     headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Content-Type': 'application/json',
-      'Prefer': 'resolution=merge-duplicates'
+      'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates'
     },
     body: JSON.stringify(rows)
   });
@@ -190,22 +190,42 @@ const PEOPLE = [
   { name: '李馨悦', id: '25020041043' },
 ];
 
+const RATERS = [
+  '蔡丽华','曹哲','陈超祺','陈可可','陈瑞','陈晓曦','陈昀都','陈哲鸣',
+  '单歆博','丁铎航','丁世杰','段熙然','段泽昊','高邓鑫','高颢瑜',
+  '龚垚兴','韩雨辰','郝佳绮','何嘉怡','胡鑫慧','赖芳群','李宛佳泓',
+  '李想','李雨航','练一凡','林依然','张永俊'
+];
+
+const ALL_NAMES = [...PEOPLE.map(p => p.name), ...RATERS].sort();
+const PEOPLE_NAMES = new Set(PEOPLE.map(p => p.name));
+const RATER_SET = new Set(RATERS);
+
 const ADMIN_NAME = '张思浩';
 const ADMIN_ID = '000000';
+const TOTAL_RATERS = 38; // 11 + 27
 
-let currentUser = null;
+let currentUser = null; // { name, id, mode:'mutual'|'full' }
+
+// Init dropdown
+(function() {
+  const sel = document.getElementById('login-name');
+  ALL_NAMES.forEach(n => {
+    const o = document.createElement('option');
+    o.value = n; o.textContent = n; sel.appendChild(o);
+  });
+})();
 
 // ===== HELPERS =====
-function showView(viewId) {
+function showView(v) {
   ['view-login','view-rating','view-complete','view-admin'].forEach(id => {
     document.getElementById(id).style.display = 'none';
   });
-  document.getElementById(viewId).style.display = 'block';
+  document.getElementById(v).style.display = 'block';
   document.getElementById('container').style.animation = 'none';
   document.getElementById('container').offsetHeight;
   document.getElementById('container').style.animation = 'fadeIn 0.3s ease';
 }
-
 function goToLogin() {
   currentUser = null;
   document.getElementById('login-name').value = '';
@@ -213,168 +233,166 @@ function goToLogin() {
   document.getElementById('login-error').textContent = '';
   showView('view-login');
 }
+function isValidSid(id) { return /^(25020041|24020041)\d{3}$/.test(id); }
 
-function findPerson(name, id) {
-  return PEOPLE.find(p => p.name === name.trim() && p.id === id.trim());
-}
-
-// ===== SUPABASE API =====
-async function apiGetAllScores() {
-  const rows = await supabaseGet('scores?select=*');
-  const result = {};
-  for (const row of rows) {
-    if (!result[row.rater_id]) result[row.rater_id] = {};
-    result[row.rater_id][row.target_id] = row.score;
-  }
-  return result;
-}
-
+// ===== API =====
+async function apiGetAllRows() { return supabaseGet('scores?select=*'); }
 async function apiGetMyScores(raterId) {
   const rows = await supabaseGet('scores?rater_id=eq.' + encodeURIComponent(raterId) + '&select=*');
-  const result = {};
-  for (const row of rows) {
-    result[row.target_id] = row.score;
-  }
-  return result;
+  const r = {}; rows.forEach(x => r[x.target_id] = x.score); return r;
 }
-
-async function apiSaveScores(raterId, scores) {
-  const rows = Object.entries(scores).map(([target_id, score]) => ({
-    rater_id: raterId,
-    target_id: target_id,
-    score: score
+async function apiSaveScores(raterId, raterName, scores) {
+  const rows = Object.entries(scores).map(([tid, s]) => ({
+    rater_id: raterId, rater_name: raterName, target_id: tid, score: s
   }));
   await supabaseUpsert('scores', rows);
-  return { ok: true };
 }
 
 // ===== VIEW 1: LOGIN =====
 function handleLogin() {
   const name = document.getElementById('login-name').value.trim();
   const id = document.getElementById('login-id').value.trim();
-  const errEl = document.getElementById('login-error');
+  const err = document.getElementById('login-error');
+  if (!name) { err.textContent = '请选择您的姓名'; return; }
+  if (!id) { err.textContent = '请输入学号'; return; }
 
-  if (!name || !id) { errEl.textContent = '请输入姓名和学号'; return; }
-
+  // Admin
   if (name === ADMIN_NAME && id === ADMIN_ID) {
-    errEl.textContent = '';
-    showView('view-admin');
-    renderAdmin();
+    err.textContent = ''; showView('view-admin'); renderAdmin(); return;
+  }
+
+  // 11 evaluees → mutual evaluation
+  if (PEOPLE_NAMES.has(name)) {
+    const p = PEOPLE.find(x => x.name === name);
+    if (id !== p.id) { err.textContent = '学号与姓名不匹配'; return; }
+    currentUser = { name, id, mode: 'mutual' };
+    err.textContent = ''; showView('view-rating'); renderRating();
     return;
   }
 
-  const person = findPerson(name, id);
-  if (!person) { errEl.textContent = '姓名与学号不匹配，请重新输入'; return; }
+  // 27 raters → full evaluation
+  if (RATER_SET.has(name)) {
+    if (!isValidSid(id)) { err.textContent = '学号格式错误，应为11位数字，以25020041或24020041开头'; return; }
+    currentUser = { name, id, mode: 'full' };
+    err.textContent = ''; showView('view-rating'); renderRating();
+    return;
+  }
 
-  currentUser = person;
-  errEl.textContent = '';
-  showView('view-rating');
-  renderRating();
+  err.textContent = '姓名不在名单中';
 }
 
 // ===== VIEW 2: RATING =====
 async function renderRating() {
-  const others = PEOPLE.filter(p => p.id !== currentUser.id);
+  const modeLabel = currentUser.mode === 'mutual' ? '互评模式（排除自己）' : '全评模式';
   document.getElementById('current-user-info').textContent =
-    `当前评分人：${currentUser.name}（${currentUser.id}）`;
+    `当前评分人：${currentUser.name}（${currentUser.id}）— ${modeLabel}`;
 
-  // 从服务器加载已有评分
-  let existingScores = {};
-  try { existingScores = await apiGetMyScores(currentUser.id); } catch (e) {}
+  const targets = currentUser.mode === 'mutual'
+    ? PEOPLE.filter(p => p.id !== currentUser.id)
+    : PEOPLE;
 
-  const listEl = document.getElementById('rating-list');
-  listEl.innerHTML = others.map(p => `
+  let existing = {};
+  try { existing = await apiGetMyScores(currentUser.id); } catch(e) {}
+
+  document.getElementById('rating-list').innerHTML = targets.map(p => `
     <div class="rating-item">
       <div class="info">
         <div class="name">${p.name}</div>
         <div class="sid">${p.id}</div>
       </div>
       <input type="number" id="score-${p.id}" min="0" max="100" step="1"
-             value="${existingScores[p.id] !== undefined ? existingScores[p.id] : ''}"
+             value="${existing[p.id] !== undefined ? existing[p.id] : ''}"
              placeholder="0-100" inputmode="numeric">
     </div>
   `).join('');
   document.getElementById('rating-error').textContent = '';
 }
 
-async function goToRating() {
-  showView('view-rating');
-  await renderRating();
-}
+async function goToRating() { showView('view-rating'); await renderRating(); }
 
 async function handleSubmit() {
-  const others = PEOPLE.filter(p => p.id !== currentUser.id);
-  const errEl = document.getElementById('rating-error');
+  const targets = currentUser.mode === 'mutual'
+    ? PEOPLE.filter(p => p.id !== currentUser.id)
+    : PEOPLE;
+  const err = document.getElementById('rating-error');
   const btn = document.getElementById('btn-submit');
   const newScores = {};
-
-  for (const p of others) {
+  for (const p of targets) {
     const input = document.getElementById('score-' + p.id);
     const val = input.value.trim();
-    if (val === '') { errEl.textContent = `请为 ${p.name} 打分`; input.focus(); return; }
-    const num = Number(val);
-    if (!Number.isInteger(num) || num < 0 || num > 100) {
-      errEl.textContent = `${p.name} 的分数须为 0-100 的整数`; input.focus(); return;
-    }
-    newScores[p.id] = num;
+    if (val === '') { err.textContent = '请为 ' + p.name + ' 打分'; input.focus(); return; }
+    const n = Number(val);
+    if (!Number.isInteger(n) || n < 0 || n > 100) { err.textContent = p.name + ' 的分数须为 0-100 的整数'; input.focus(); return; }
+    newScores[p.id] = n;
   }
-
-  btn.disabled = true;
-  btn.textContent = '提交中…';
-  errEl.textContent = '';
-
+  btn.disabled = true; btn.textContent = '提交中…'; err.textContent = '';
   try {
-    await apiSaveScores(currentUser.id, newScores);
+    await apiSaveScores(currentUser.id, currentUser.name, newScores);
     showView('view-complete');
-  } catch (e) {
-    errEl.textContent = '提交失败: ' + e.message;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '提交评分';
-  }
+  } catch(e) {
+    err.textContent = '提交失败: ' + e.message;
+  } finally { btn.disabled = false; btn.textContent = '提交评分'; }
 }
 
 // ===== VIEW 4: ADMIN =====
 async function renderAdmin() {
-  const adminEl = document.getElementById('admin-content');
+  const el = document.getElementById('admin-content');
+  let rows = [];
+  try { rows = await apiGetAllRows(); } catch(e) { el.innerHTML = '<div class="loading">加载失败: '+e.message+'</div>'; return; }
 
-  let allScores = {};
-  try { allScores = await apiGetAllScores(); } catch (e) {
-    adminEl.innerHTML = '<div class="loading">加载失败: ' + e.message + '</div>';
-    return;
-  }
+  // Who has completed?
+  const doneIds = new Set();
+  const idToName = {};
+  rows.forEach(r => { doneIds.add(r.rater_id); if (r.rater_name) idToName[r.rater_id] = r.rater_name; });
 
-  let html = '';
-  PEOPLE.forEach(person => {
-    html += `<div class="person-card">`;
-    html += `<h3>${person.name} <span style="font-weight:400;color:#999;font-size:13px;">${person.id}</span></h3>`;
-
-    const received = [];
-    PEOPLE.forEach(rater => {
-      if (rater.id === person.id) return;
-      const raterScores = allScores[rater.id];
-      if (raterScores && raterScores[person.id] !== undefined) {
-        received.push({ raterName: rater.name, score: raterScores[person.id] });
-      }
-    });
-
-    if (received.length === 0) {
-      html += `<div class="score-detail no-score">暂无评分</div>`;
-    } else {
-      html += `<div class="score-detail">`;
-      received.forEach((r, i) => {
-        html += `${r.raterName}：${r.score} 分`;
-        if (i < received.length - 1) html += '，';
-      });
-      html += `</div>`;
-      const sum = received.reduce((s, r) => s + r.score, 0);
-      const avg = (sum / received.length).toFixed(2);
-      html += `<div class="avg">平均分：${avg}</div>`;
-    }
-    html += `</div>`;
+  const doneNames = [];
+  const pendingNames = [];
+  ALL_NAMES.forEach(name => {
+    const found = Object.entries(idToName).some(([id, n]) => n === name && doneIds.has(id));
+    if (found) doneNames.push(name); else pendingNames.push(name);
   });
 
-  adminEl.innerHTML = html;
+  const done = doneNames.length, total = TOTAL_RATERS, pct = Math.round(done/total*100);
+
+  let h = '';
+  h += '<div class="progress-text">'+done+' / '+total+' 人已完成（'+pct+'%）</div>';
+  h += '<div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:'+pct+'%"></div></div>';
+
+  h += '<div class="rater-lists">';
+  h += '<details class="rater-section"><summary>✅ 已完成（'+doneNames.length+'人）</summary><div class="tags">';
+  doneNames.forEach(n => h += '<span class="tag tag-done">'+n+'</span>');
+  if (!done) h += '<span style="color:#ccc;font-size:12px;">暂无</span>';
+  h += '</div></details>';
+
+  h += '<details class="rater-section" open><summary>⏳ 未完成（'+pendingNames.length+'人）</summary><div class="tags">';
+  pendingNames.forEach(n => h += '<span class="tag tag-pending">'+n+'</span>');
+  if (!pendingNames.length) h += '<span style="color:#2e7d32;font-size:12px;">全部完成 🎉</span>';
+  h += '</div></details></div>';
+
+  h += '<h3 style="margin:20px 0 12px;color:#555;">被评人得分</h3>';
+
+  PEOPLE.forEach(p => {
+    const recv = [];
+    rows.forEach(r => { if (r.target_id === p.id) recv.push({ name: r.rater_name || r.rater_id, score: r.score }); });
+    const totalScore = recv.reduce((s,r) => s+r.score, 0);
+    const avg = recv.length ? (totalScore/recv.length).toFixed(2) : null;
+
+    h += '<div class="person-card" onclick="this.classList.toggle(\'open\')">';
+    h += '<div class="card-header">';
+    h += '<h3>'+p.name+' <span style="font-weight:400;color:#aaa;font-size:12px;">'+p.id+'</span></h3>';
+    h += '<span class="card-score">'+ (recv.length ? totalScore+' 分' : '—') +'</span>';
+    h += '<span class="card-arrow">▼</span></div>';
+    h += '<div class="card-detail">';
+    if (!recv.length) { h += '<div class="no-score">暂无评分</div>'; }
+    else {
+      h += '<div>';
+      recv.forEach((r,i) => { h += r.name+'：'+r.score+' 分'; if (i<recv.length-1) h += '，'; });
+      h += '</div><div class="detail-avg">平均分：'+avg+'（共 '+recv.length+' 人评分）</div>';
+    }
+    h += '</div></div>';
+  });
+
+  el.innerHTML = h;
 }
 </script>
 </body>
