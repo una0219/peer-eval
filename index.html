@@ -219,11 +219,17 @@ const PEOPLE_NAMES = new Set(PEOPLE.map(p => p.name));
 const PEOPLE_IDS = new Set(PEOPLE.map(p => p.id));
 const RATER_SET = new Set(RATERS);
 
-// Categorize a score row: 'mutual' | 'full' | 'unknown'
+// ID → Name lookup (for 11 PEOPLE)
+const ID_TO_NAME = {};
+PEOPLE.forEach(p => { ID_TO_NAME[p.id] = p.name; });
+
+function raterLabel(r) {
+  return r.rater_name || ID_TO_NAME[r.rater_id] || r.rater_id;
+}
+
 function classifyRow(r) {
   if (r.rater_name && PEOPLE_NAMES.has(r.rater_name)) return 'mutual';
   if (r.rater_name && RATER_SET.has(r.rater_name)) return 'full';
-  // Fallback: check rater_id for known people
   if (r.rater_id && PEOPLE_IDS.has(r.rater_id)) return 'mutual';
   return 'unknown';
 }
@@ -409,7 +415,6 @@ async function renderAdmin2() {
   let h = '';
   PEOPLE.forEach(p => {
     const all = rows.filter(r => r.target_id === p.id);
-    const label = r => r.rater_name || r.rater_id;
     const mutual = all.filter(r => classifyRow(r) === 'mutual');
     const full = all.filter(r => classifyRow(r) === 'full');
     const total = all.reduce((s,r)=>s+r.score,0);
@@ -424,11 +429,11 @@ async function renderAdmin2() {
     if (!all.length) { h += '<div class="no-score">暂无评分</div>'; }
     else {
       h += '<div><b>互评：</b>';
-      if (mutual.length) { mutual.forEach((r,i)=>{ h += label(r)+'：'+r.score+' 分'; if (i<mutual.length-1) h += '，'; }); }
+      if (mutual.length) { mutual.forEach((r,i)=>{ h += raterLabel(r)+'：'+r.score+' 分'; if (i<mutual.length-1) h += '，'; }); }
       else h += '<span class="no-score">暂无</span>';
       h += '</div>';
       h += '<div style="margin-top:4px;"><b>全评：</b>';
-      if (full.length) { full.forEach((r,i)=>{ h += label(r)+'：'+r.score+' 分'; if (i<full.length-1) h += '，'; }); }
+      if (full.length) { full.forEach((r,i)=>{ h += raterLabel(r)+'：'+r.score+' 分'; if (i<full.length-1) h += '，'; }); }
       else h += '<span class="no-score">暂无</span>';
       h += '</div>';
       h += '<div class="detail-avg">平均分：'+avg+'（共 '+all.length+' 人评分，总分 '+total+'）</div>';
