@@ -147,12 +147,33 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-// ===== SUPABASE =====
+// ===== SUPABASE CONFIG =====
 const SUPABASE_URL = 'https://tcqwzumktgjyclnmotgb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjcXd6dW1rdGdqeWNsbm1vdGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzNDg1ODYsImV4cCI6MjEwMTkyNDU4Nn0.G0JcfU_W70q5HHUkYBzyKGH6i7tOFeEIYz9StZN1VoQ';
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Direct REST API — no CDN dependency
+async function supabaseGet(path) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  });
+  if (!res.ok) throw new Error((await res.json()).message || res.statusText);
+  return res.json();
+}
+
+async function supabaseUpsert(table, rows) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates'
+    },
+    body: JSON.stringify(rows)
+  });
+  if (!res.ok) throw new Error((await res.json()).message || res.statusText);
+}
 
 // ===== DATA =====
 const PEOPLE = [
@@ -199,11 +220,9 @@ function findPerson(name, id) {
 
 // ===== SUPABASE API =====
 async function apiGetAllScores() {
-  const { data, error } = await supabase.from('scores').select('*');
-  if (error) throw new Error(error.message);
-  // Transform rows → { rater_id: { target_id: score, ... }, ... }
+  const rows = await supabaseGet('scores?select=*');
   const result = {};
-  for (const row of data) {
+  for (const row of rows) {
     if (!result[row.rater_id]) result[row.rater_id] = {};
     result[row.rater_id][row.target_id] = row.score;
   }
@@ -211,10 +230,9 @@ async function apiGetAllScores() {
 }
 
 async function apiGetMyScores(raterId) {
-  const { data, error } = await supabase.from('scores').select('*').eq('rater_id', raterId);
-  if (error) throw new Error(error.message);
+  const rows = await supabaseGet('scores?rater_id=eq.' + encodeURIComponent(raterId) + '&select=*');
   const result = {};
-  for (const row of data) {
+  for (const row of rows) {
     result[row.target_id] = row.score;
   }
   return result;
@@ -226,8 +244,7 @@ async function apiSaveScores(raterId, scores) {
     target_id: target_id,
     score: score
   }));
-  const { error } = await supabase.from('scores').upsert(rows, { onConflict: 'rater_id,target_id' });
-  if (error) throw new Error(error.message);
+  await supabaseUpsert('scores', rows);
   return { ok: true };
 }
 
