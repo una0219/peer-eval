@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>互评系统</title>
+<title>班委能力评测</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
@@ -13,22 +13,23 @@ body {
 }
 .container {
   background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-  width: 100%; max-width: 720px; padding: 40px; animation: fadeIn 0.3s ease;
+  width: 100%; max-width: 760px; padding: 36px 40px; animation: fadeIn 0.3s ease;
 }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
-.subtitle { text-align: center; color: #888; margin-bottom: 32px; font-size: 14px; }
-.form-group { margin-bottom: 20px; }
+h2 { color: #555; font-size: 18px; margin: 24px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #eee; }
+h3 { color: #555; font-size: 15px; margin: 18px 0 8px; }
+.subtitle { text-align: center; color: #888; margin-bottom: 28px; font-size: 14px; }
+.form-group { margin-bottom: 18px; }
 .form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #444; font-size: 14px; }
-.form-group input, .form-group select {
+.form-group input {
   width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0;
   border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s; background: #fff;
 }
-.form-group input:focus, .form-group select:focus { border-color: #667eea; }
-.hint { font-size: 12px; color: #aaa; margin-top: 4px; }
+.form-group input:focus { border-color: #667eea; }
 .btn {
   width: 100%; padding: 14px; border: none; border-radius: 8px;
   font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
@@ -39,8 +40,9 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
 .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
 .btn-primary:active { transform: translateY(0); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-.btn-secondary { background: #f0f0f0; color: #555; margin-top: 12px; }
+.btn-secondary { background: #f0f0f0; color: #555; margin-top: 10px; }
 .btn-secondary:hover { background: #e4e4e4; }
+.btn-small { width: auto; padding: 8px 20px; font-size: 13px; margin-top: 4px; }
 .error-msg { color: #e74c3c; text-align: center; margin-top: 12px; font-size: 14px; min-height: 20px; }
 .current-user {
   background: #f8f4ff; border-left: 4px solid #667eea;
@@ -62,21 +64,20 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
 .rating-item input[type="number"] { -moz-appearance: textfield; }
 .success-icon { text-align: center; font-size: 64px; margin-bottom: 16px; }
 .success-text { text-align: center; font-size: 18px; color: #333; margin-bottom: 24px; }
-.progress-bar-wrap { background: #eee; border-radius: 10px; height: 24px; margin-bottom: 8px; overflow: hidden; }
-.progress-bar-fill {
-  height: 100%; border-radius: 10px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); transition: width 0.5s ease;
-}
-.progress-text { text-align: center; font-size: 18px; font-weight: 700; color: #667eea; margin-bottom: 20px; }
-.rater-lists { margin-bottom: 20px; }
-.rater-section { margin-bottom: 10px; }
-.rater-section summary {
-  font-weight: 600; color: #555; cursor: pointer; padding: 8px 0; font-size: 14px; user-select: none;
-}
-.rater-section .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-.rater-section .tag { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+
+/* Admin */
+.progress-bar-wrap { background: #eee; border-radius: 8px; height: 18px; margin-bottom: 6px; overflow: hidden; }
+.progress-bar-fill { height: 100%; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); transition: width 0.5s ease; }
+.progress-sub { font-size: 13px; color: #888; text-align: center; margin-bottom: 12px; }
+.tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+.tag { display: inline-block; padding: 3px 9px; border-radius: 16px; font-size: 12px; font-weight: 500; }
 .tag-done { background: #e8f5e9; color: #2e7d32; }
 .tag-pending { background: #fff3e0; color: #e65100; }
+.score-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 10px; }
+.score-table th, .score-table td { padding: 8px 10px; text-align: center; border-bottom: 1px solid #eee; }
+.score-table th { background: #f8f4ff; color: #555; font-weight: 700; }
+.score-table td { color: #444; }
+.score-table .highlight { font-weight: 700; color: #667eea; }
 .person-card {
   background: #fafafa; border-radius: 12px; padding: 16px 20px;
   margin-bottom: 12px; border: 1px solid #eee; cursor: pointer;
@@ -84,7 +85,7 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
 }
 .person-card:hover { border-color: #667eea; box-shadow: 0 2px 8px rgba(102,126,234,0.15); }
 .person-card .card-header { display: flex; justify-content: space-between; align-items: center; }
-.person-card .card-header h3 { font-size: 15px; color: #333; }
+.person-card .card-header h4 { font-size: 15px; color: #333; }
 .person-card .card-score { font-size: 20px; font-weight: 700; color: #667eea; white-space: nowrap; margin-left: 12px; }
 .person-card .card-detail {
   display: none; margin-top: 12px; padding-top: 12px;
@@ -96,6 +97,10 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
 .person-card .detail-avg { margin-top: 6px; font-weight: 700; color: #444; font-size: 14px; }
 .no-score { color: #ccc; font-style: italic; }
 .loading { text-align: center; color: #999; padding: 40px; font-size: 15px; }
+
+.btn-row { display: flex; gap: 10px; }
+.btn-row .btn { flex: 1; }
+
 .rating-list::-webkit-scrollbar { width: 6px; }
 .rating-list::-webkit-scrollbar-track { background: transparent; }
 .rating-list::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 3px; }
@@ -107,24 +112,24 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
 
   <!-- View 1: Login -->
   <div id="view-login">
-    <h1>📋 互评系统</h1>
-    <p class="subtitle">海技一班 · 班内互评</p>
+    <h1>📋 班委能力评测</h1>
+    <p class="subtitle">海技一班</p>
     <div class="form-group">
       <label for="login-name">姓名</label>
-      <select id="login-name"><option value="">请选择您的姓名</option></select>
+      <input type="text" id="login-name" list="name-list" placeholder="请输入姓名" autocomplete="off">
+      <datalist id="name-list"></datalist>
     </div>
     <div class="form-group">
       <label for="login-id">学号</label>
-      <input type="text" id="login-id" placeholder="请输入11位学号" autocomplete="off" inputmode="numeric" maxlength="11">
-      <div class="hint">25020041XXX 或 24020041XXX</div>
+      <input type="text" id="login-id" placeholder="请输入学号" autocomplete="off" inputmode="numeric">
     </div>
-    <button class="btn btn-primary" id="btn-login" onclick="handleLogin()">确 认</button>
+    <button class="btn btn-primary" onclick="handleLogin()">确 认</button>
     <p class="error-msg" id="login-error"></p>
   </div>
 
   <!-- View 2: Rating -->
   <div id="view-rating" style="display:none;">
-    <h1>📝 互评打分</h1>
+    <h1>📝 班委能力评测</h1>
     <div class="current-user" id="current-user-info"></div>
     <div class="rating-list" id="rating-list"><div class="loading">加载中…</div></div>
     <button class="btn btn-primary" id="btn-submit" onclick="handleSubmit()">提交评分</button>
@@ -137,22 +142,34 @@ h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 28px; }
     <h1>✅ 评分完成</h1>
     <div class="success-icon">🎉</div>
     <p class="success-text">您的评分已成功提交！</p>
-    <button class="btn btn-primary" onclick="goToRating()">重新评分</button>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="goToRating()">重新评分</button>
+      <button class="btn btn-secondary" onclick="goToLogin()">返回登录</button>
+    </div>
+  </div>
+
+  <!-- View 4: Admin Page 1 — Overview -->
+  <div id="view-admin1" style="display:none;">
+    <h1>🔧 评测总览</h1>
+    <p class="subtitle">互评 & 全评 进度与得分</p>
+    <div id="admin1-content"><div class="loading">加载中…</div></div>
+    <button class="btn btn-secondary" onclick="showView('view-admin2');renderAdmin2();">查看个人详情 →</button>
     <button class="btn btn-secondary" onclick="goToLogin()">返回登录</button>
   </div>
 
-  <!-- View 4: Admin -->
-  <div id="view-admin" style="display:none;">
-    <h1>🔧 管理员面板</h1>
-    <p class="subtitle">班内互评进度与结果</p>
-    <div id="admin-content"><div class="loading">加载中…</div></div>
+  <!-- View 5: Admin Page 2 — Per-person details -->
+  <div id="view-admin2" style="display:none;">
+    <h1>🔧 个人详情</h1>
+    <p class="subtitle">点击卡片展开评分明细</p>
+    <div id="admin2-content"><div class="loading">加载中…</div></div>
+    <button class="btn btn-secondary" onclick="showView('view-admin1');renderAdmin1();">← 返回总览</button>
     <button class="btn btn-secondary" onclick="goToLogin()">返回登录</button>
   </div>
 
 </div>
 
 <script>
-// ===== SUPABASE CONFIG =====
+// ===== SUPABASE =====
 const SUPABASE_URL = 'https://tcqwzumktgjyclnmotgb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjcXd6dW1rdGdqeWNsbm1vdGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzNDg1ODYsImV4cCI6MjEwMTkyNDU4Nn0.G0JcfU_W70q5HHUkYBzyKGH6i7tOFeEIYz9StZN1VoQ';
 
@@ -203,22 +220,18 @@ const RATER_SET = new Set(RATERS);
 
 const ADMIN_NAME = '张思浩';
 const ADMIN_ID = '000000';
-const TOTAL_RATERS = 38; // 11 + 27
 
-let currentUser = null; // { name, id, mode:'mutual'|'full' }
+let currentUser = null; // { name, id, mode }
 
-// Init dropdown
-(function() {
-  const sel = document.getElementById('login-name');
-  ALL_NAMES.forEach(n => {
-    const o = document.createElement('option');
-    o.value = n; o.textContent = n; sel.appendChild(o);
-  });
+// Init datalist
+(function(){
+  const dl = document.getElementById('name-list');
+  ALL_NAMES.forEach(n => { const o = document.createElement('option'); o.value = n; dl.appendChild(o); });
 })();
 
 // ===== HELPERS =====
 function showView(v) {
-  ['view-login','view-rating','view-complete','view-admin'].forEach(id => {
+  ['view-login','view-rating','view-complete','view-admin1','view-admin2'].forEach(id => {
     document.getElementById(id).style.display = 'none';
   });
   document.getElementById(v).style.display = 'block';
@@ -234,6 +247,15 @@ function goToLogin() {
   showView('view-login');
 }
 function isValidSid(id) { return /^(25020041|24020041)\d{3}$/.test(id); }
+
+// Get completed rater info from rows
+function getCompletion(rows) {
+  const doneIds = new Set();
+  const idToName = {};
+  rows.forEach(r => { doneIds.add(r.rater_id); if (r.rater_name) idToName[r.rater_id] = r.rater_name; });
+  const isDone = name => Object.entries(idToName).some(([id, n]) => n === name && doneIds.has(id));
+  return { doneIds, idToName, isDone };
+}
 
 // ===== API =====
 async function apiGetAllRows() { return supabaseGet('scores?select=*'); }
@@ -253,29 +275,24 @@ function handleLogin() {
   const name = document.getElementById('login-name').value.trim();
   const id = document.getElementById('login-id').value.trim();
   const err = document.getElementById('login-error');
-  if (!name) { err.textContent = '请选择您的姓名'; return; }
+  if (!name) { err.textContent = '请输入姓名'; return; }
   if (!id) { err.textContent = '请输入学号'; return; }
 
-  // Admin
   if (name === ADMIN_NAME && id === ADMIN_ID) {
-    err.textContent = ''; showView('view-admin'); renderAdmin(); return;
+    err.textContent = ''; showView('view-admin1'); renderAdmin1(); return;
   }
 
-  // 11 evaluees → mutual evaluation
   if (PEOPLE_NAMES.has(name)) {
     const p = PEOPLE.find(x => x.name === name);
     if (id !== p.id) { err.textContent = '学号与姓名不匹配'; return; }
     currentUser = { name, id, mode: 'mutual' };
-    err.textContent = ''; showView('view-rating'); renderRating();
-    return;
+    err.textContent = ''; showView('view-rating'); renderRating(); return;
   }
 
-  // 27 raters → full evaluation
   if (RATER_SET.has(name)) {
-    if (!isValidSid(id)) { err.textContent = '学号格式错误，应为11位数字，以25020041或24020041开头'; return; }
+    if (!isValidSid(id)) { err.textContent = '学号格式错误'; return; }
     currentUser = { name, id, mode: 'full' };
-    err.textContent = ''; showView('view-rating'); renderRating();
-    return;
+    err.textContent = ''; showView('view-rating'); renderRating(); return;
   }
 
   err.textContent = '姓名不在名单中';
@@ -285,35 +302,20 @@ function handleLogin() {
 async function renderRating() {
   const modeLabel = currentUser.mode === 'mutual' ? '互评模式（排除自己）' : '全评模式';
   document.getElementById('current-user-info').textContent =
-    `当前评分人：${currentUser.name}（${currentUser.id}）— ${modeLabel}`;
-
-  const targets = currentUser.mode === 'mutual'
-    ? PEOPLE.filter(p => p.id !== currentUser.id)
-    : PEOPLE;
-
+    '当前评分人：' + currentUser.name + '（' + currentUser.id + '）— ' + modeLabel;
+  const targets = currentUser.mode === 'mutual' ? PEOPLE.filter(p => p.id !== currentUser.id) : PEOPLE;
   let existing = {};
   try { existing = await apiGetMyScores(currentUser.id); } catch(e) {}
-
-  document.getElementById('rating-list').innerHTML = targets.map(p => `
-    <div class="rating-item">
-      <div class="info">
-        <div class="name">${p.name}</div>
-        <div class="sid">${p.id}</div>
-      </div>
-      <input type="number" id="score-${p.id}" min="0" max="100" step="1"
-             value="${existing[p.id] !== undefined ? existing[p.id] : ''}"
-             placeholder="0-100" inputmode="numeric">
-    </div>
-  `).join('');
+  document.getElementById('rating-list').innerHTML = targets.map(p =>
+    '<div class="rating-item"><div class="info"><div class="name">'+p.name+'</div><div class="sid">'+p.id+'</div></div>'+
+    '<input type="number" id="score-'+p.id+'" min="0" max="100" step="1" value="'+(existing[p.id]!==undefined?existing[p.id]:'')+'" placeholder="0-100" inputmode="numeric"></div>'
+  ).join('');
   document.getElementById('rating-error').textContent = '';
 }
-
 async function goToRating() { showView('view-rating'); await renderRating(); }
 
 async function handleSubmit() {
-  const targets = currentUser.mode === 'mutual'
-    ? PEOPLE.filter(p => p.id !== currentUser.id)
-    : PEOPLE;
+  const targets = currentUser.mode === 'mutual' ? PEOPLE.filter(p => p.id !== currentUser.id) : PEOPLE;
   const err = document.getElementById('rating-error');
   const btn = document.getElementById('btn-submit');
   const newScores = {};
@@ -326,68 +328,99 @@ async function handleSubmit() {
     newScores[p.id] = n;
   }
   btn.disabled = true; btn.textContent = '提交中…'; err.textContent = '';
-  try {
-    await apiSaveScores(currentUser.id, currentUser.name, newScores);
-    showView('view-complete');
-  } catch(e) {
-    err.textContent = '提交失败: ' + e.message;
-  } finally { btn.disabled = false; btn.textContent = '提交评分'; }
+  try { await apiSaveScores(currentUser.id, currentUser.name, newScores); showView('view-complete'); }
+  catch(e) { err.textContent = '提交失败: ' + e.message; }
+  finally { btn.disabled = false; btn.textContent = '提交评分'; }
 }
 
-// ===== VIEW 4: ADMIN =====
-async function renderAdmin() {
-  const el = document.getElementById('admin-content');
+// ===== VIEW 4: ADMIN PAGE 1 — Overview =====
+async function renderAdmin1() {
+  const el = document.getElementById('admin1-content');
   let rows = [];
   try { rows = await apiGetAllRows(); } catch(e) { el.innerHTML = '<div class="loading">加载失败: '+e.message+'</div>'; return; }
 
-  // Who has completed?
-  const doneIds = new Set();
-  const idToName = {};
-  rows.forEach(r => { doneIds.add(r.rater_id); if (r.rater_name) idToName[r.rater_id] = r.rater_name; });
+  const { isDone } = getCompletion(rows);
 
-  const doneNames = [];
-  const pendingNames = [];
-  ALL_NAMES.forEach(name => {
-    const found = Object.entries(idToName).some(([id, n]) => n === name && doneIds.has(id));
-    if (found) doneNames.push(name); else pendingNames.push(name);
-  });
-
-  const done = doneNames.length, total = TOTAL_RATERS, pct = Math.round(done/total*100);
+  // --- Progress ---
+  const mutualDone = PEOPLE.filter(p => isDone(p.name));
+  const mutualPending = PEOPLE.filter(p => !isDone(p.name));
+  const fullDone = RATERS.filter(n => isDone(n));
+  const fullPending = RATERS.filter(n => !isDone(n));
 
   let h = '';
-  h += '<div class="progress-text">'+done+' / '+total+' 人已完成（'+pct+'%）</div>';
-  h += '<div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:'+pct+'%"></div></div>';
 
-  h += '<div class="rater-lists">';
-  h += '<details class="rater-section"><summary>✅ 已完成（'+doneNames.length+'人）</summary><div class="tags">';
-  doneNames.forEach(n => h += '<span class="tag tag-done">'+n+'</span>');
-  if (!done) h += '<span style="color:#ccc;font-size:12px;">暂无</span>';
-  h += '</div></details>';
+  // === 互评进度 ===
+  h += '<h2>🔄 互评进度（'+mutualDone.length+'/'+PEOPLE.length+'）</h2>';
+  h += '<div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:'+Math.round(mutualDone.length/PEOPLE.length*100)+'%"></div></div>';
+  h += '<div class="progress-sub">';
+  if (mutualDone.length) h += '已完成：'+mutualDone.map(p=>p.name).join('、');
+  if (mutualPending.length) h += '；未完成：'+mutualPending.map(p=>p.name).join('、');
+  h += '</div>';
 
-  h += '<details class="rater-section" open><summary>⏳ 未完成（'+pendingNames.length+'人）</summary><div class="tags">';
-  pendingNames.forEach(n => h += '<span class="tag tag-pending">'+n+'</span>');
-  if (!pendingNames.length) h += '<span style="color:#2e7d32;font-size:12px;">全部完成 🎉</span>';
-  h += '</div></details></div>';
+  // === 全评进度 ===
+  h += '<h2>📋 全评进度（'+fullDone.length+'/'+RATERS.length+'）</h2>';
+  h += '<div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:'+Math.round(fullDone.length/RATERS.length*100)+'%"></div></div>';
+  h += '<div class="progress-sub">';
+  if (fullDone.length) h += '已完成：'+fullDone.join('、');
+  if (fullPending.length) h += '；未完成：'+fullPending.join('、');
+  h += '</div>';
 
-  h += '<h3 style="margin:20px 0 12px;color:#555;">被评人得分</h3>';
-
+  // === 互评得分 ===
+  h += '<h2>📊 互评得分</h2>';
+  h += '<table class="score-table"><tr><th>姓名</th><th>评分人数</th><th>总分</th><th>平均分</th></tr>';
   PEOPLE.forEach(p => {
-    const recv = [];
-    rows.forEach(r => { if (r.target_id === p.id) recv.push({ name: r.rater_name || r.rater_id, score: r.score }); });
-    const totalScore = recv.reduce((s,r) => s+r.score, 0);
-    const avg = recv.length ? (totalScore/recv.length).toFixed(2) : null;
+    const scores = rows.filter(r => r.target_id === p.id && PEOPLE_NAMES.has(r.rater_name));
+    const total = scores.reduce((s,r)=>s+r.score,0);
+    const avg = scores.length ? (total/scores.length).toFixed(2) : '—';
+    h += '<tr><td>'+p.name+'</td><td>'+scores.length+'</td><td class="highlight">'+(scores.length?total:'—')+'</td><td class="highlight">'+avg+'</td></tr>';
+  });
+  h += '</table>';
+
+  // === 全评得分 ===
+  h += '<h2>📊 全评得分</h2>';
+  h += '<table class="score-table"><tr><th>姓名</th><th>评分人数</th><th>总分</th><th>平均分</th></tr>';
+  PEOPLE.forEach(p => {
+    const scores = rows.filter(r => r.target_id === p.id && RATER_SET.has(r.rater_name));
+    const total = scores.reduce((s,r)=>s+r.score,0);
+    const avg = scores.length ? (total/scores.length).toFixed(2) : '—';
+    h += '<tr><td>'+p.name+'</td><td>'+scores.length+'</td><td class="highlight">'+(scores.length?total:'—')+'</td><td class="highlight">'+avg+'</td></tr>';
+  });
+  h += '</table>';
+
+  el.innerHTML = h;
+}
+
+// ===== VIEW 5: ADMIN PAGE 2 — Per-person details =====
+async function renderAdmin2() {
+  const el = document.getElementById('admin2-content');
+  let rows = [];
+  try { rows = await apiGetAllRows(); } catch(e) { el.innerHTML = '<div class="loading">加载失败: '+e.message+'</div>'; return; }
+
+  let h = '';
+  PEOPLE.forEach(p => {
+    const all = rows.filter(r => r.target_id === p.id);
+    const mutual = all.filter(r => PEOPLE_NAMES.has(r.rater_name));
+    const full = all.filter(r => RATER_SET.has(r.rater_name));
+    const total = all.reduce((s,r)=>s+r.score,0);
+    const avg = all.length ? (total/all.length).toFixed(2) : null;
 
     h += '<div class="person-card" onclick="this.classList.toggle(\'open\')">';
     h += '<div class="card-header">';
-    h += '<h3>'+p.name+' <span style="font-weight:400;color:#aaa;font-size:12px;">'+p.id+'</span></h3>';
-    h += '<span class="card-score">'+ (recv.length ? totalScore+' 分' : '—') +'</span>';
+    h += '<h4>'+p.name+' <span style="font-weight:400;color:#aaa;font-size:12px;">'+p.id+'</span></h4>';
+    h += '<span class="card-score">'+ (all.length ? total+' 分' : '—') +'</span>';
     h += '<span class="card-arrow">▼</span></div>';
     h += '<div class="card-detail">';
-    if (!recv.length) { h += '<div class="no-score">暂无评分</div>'; }
+    if (!all.length) { h += '<div class="no-score">暂无评分</div>'; }
     else {
-      h += '<div>';
-      recv.forEach((r,i) => { h += r.name+'：'+r.score+' 分'; if (i<recv.length-1) h += '，'; });
-      h += '</div><div class="detail-avg">平均分：'+avg+'（共 '+recv.length+' 人评分）</div>';
+      h += '<div><b>互评分数：</b>';
+      if (mutual.length) { mutual.forEach((r,i)=>{ h += r.rater_name+'：'+r.score+' 分'; if (i<mutual.length-1) h += '，'; }); }
+      else h += '<span class="no-score">暂无</span>';
+      h += '</div>';
+      h += '<div style="margin-top:4px;"><b>全评分数：</b>';
+      if (full.length) { full.forEach((r,i)=>{ h += r.rater_name+'：'+r.score+' 分'; if (i<full.length-1) h += '，'; }); }
+      else h += '<span class="no-score">暂无</span>';
+      h += '</div>';
+      h += '<div class="detail-avg">综合平均分：'+avg+'（互评 '+mutual.length+' 人 + 全评 '+full.length+' 人）</div>';
     }
     h += '</div></div>';
   });
