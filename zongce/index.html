@@ -464,16 +464,13 @@ async function renderAdmin1() {
 
 // ===== VIEW 4: ADMIN DETAIL =====
 async function renderAdmin2() {
-  const el = document.getElementById('admin2-content');
   const sel = document.getElementById('admin2-select');
   const detail = document.getElementById('admin2-detail');
   detail.innerHTML = '';
   sel.innerHTML = '<option value="">请选择学生</option>' +
     ROSTER.map(r => '<option value="' + r[1] + '">' + esc(r[0]) + '（' + r[1] + '）</option>').join('');
-  el.innerHTML = '<div class="loading">加载中…</div>';
   try { allRows = await supabaseGet('submissions?select=*&order=id.desc'); }
-  catch(e) { el.innerHTML = '<div class="loading">加载失败: ' + esc(e.message) + '</div>'; return; }
-  el.innerHTML = '';
+  catch(e) { detail.innerHTML = '<div class="loading">加载失败: ' + esc(e.message) + '</div>'; }
 }
 function renderStudentDetail(id) {
   const el = document.getElementById('admin2-detail');
