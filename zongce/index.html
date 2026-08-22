@@ -13,7 +13,7 @@ body {
 }
 .container {
   background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-  width: 100%; max-width: 820px; padding: 36px 40px; animation: fadeIn 0.3s ease;
+  width: 100%; max-width: 760px; padding: 36px 40px; animation: fadeIn 0.3s ease;
 }
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
@@ -30,8 +30,9 @@ h3 { color: #555; font-size: 15px; margin: 18px 0 8px; }
   border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s; background: #fff;
   font-family: inherit;
 }
-.form-group textarea { resize: vertical; min-height: 72px; }
+.form-group textarea { resize: vertical; min-height: 110px; }
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: #667eea; }
+.form-group input[type="file"] { padding: 10px; font-size: 14px; }
 .btn {
   width: 100%; padding: 14px; border: none; border-radius: 8px;
   font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
@@ -52,31 +53,33 @@ h3 { color: #555; font-size: 15px; margin: 18px 0 8px; }
   background: #f8f4ff; border-left: 4px solid #667eea;
   padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 20px; font-size: 15px; color: #555;
 }
-.success-icon { text-align: center; font-size: 64px; margin-bottom: 16px; }
-.success-text { text-align: center; font-size: 18px; color: #333; margin-bottom: 24px; }
 
-/* Module cards */
-.module-card {
-  background: #fafafa; border: 1px solid #eee; border-radius: 12px;
-  padding: 16px 20px; margin-bottom: 14px;
+/* Draft image thumbnails */
+.thumb { position: relative; display: inline-block; margin: 0 10px 10px 0; }
+.thumb img { width: 92px; height: 92px; object-fit: cover; border-radius: 8px; border: 1px solid #e0e0e0; }
+.thumb .x {
+  position: absolute; top: -7px; right: -7px; background: #e74c3c; color: #fff;
+  border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 13px;
+  line-height: 22px; text-align: center; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.25);
 }
-.module-title { font-weight: 700; color: #333; font-size: 16px; }
-.module-sub { font-size: 12px; color: #999; margin: 4px 0 10px; line-height: 1.6; }
-.btn-add { background: #f0edff; color: #667eea; }
-.btn-add:hover { background: #e3dcff; }
+.img-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
 
-/* Entry items */
-.entry-item { background: #fff; border: 1px solid #e8e8e8; border-radius: 8px; padding: 12px; margin-bottom: 8px; }
-.entry-cat { display: inline-block; background: #f0edff; color: #667eea; font-size: 12px; padding: 2px 8px; border-radius: 12px; margin-right: 8px; }
-.entry-score { color: #764ba2; font-weight: 700; font-size: 13px; }
-.entry-title { font-weight: 600; color: #333; font-size: 14px; margin-top: 6px; word-break: break-all; }
-.entry-text { color: #666; font-size: 13px; margin-top: 6px; white-space: pre-wrap; word-break: break-all; }
-.entry-img { max-width: 130px; max-height: 130px; border-radius: 6px; margin-top: 8px; cursor: pointer; border: 1px solid #eee; display: block; }
-.entry-actions { margin-top: 8px; display: flex; gap: 8px; }
+/* History records */
+.entry-item { background: #fafafa; border: 1px solid #eee; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+.entry-text { color: #444; font-size: 14px; white-space: pre-wrap; word-break: break-all; line-height: 1.6; }
+.entry-img { width: 90px; height: 90px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 1px solid #eee; }
+.q-box {
+  background: #fff8e1; border-left: 3px solid #f0b429; border-radius: 0 6px 6px 0;
+  padding: 8px 12px; margin-top: 10px; font-size: 13px; color: #8a6d1a; line-height: 1.6;
+  white-space: pre-wrap; word-break: break-all;
+}
+.q-box b { color: #7c5f0a; }
+.entry-actions { margin-top: 10px; display: flex; justify-content: flex-end; }
+.entry-meta { font-size: 12px; color: #aaa; margin-top: 10px; }
 .no-score { color: #ccc; font-style: italic; }
 .loading { text-align: center; color: #999; padding: 40px; font-size: 15px; }
 
-/* Progress (admin) */
+/* Admin progress */
 .progress-bar-wrap { background: #eee; border-radius: 8px; height: 18px; margin-bottom: 6px; overflow: hidden; }
 .progress-bar-fill { height: 100%; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); transition: width 0.5s ease; }
 .progress-sub { font-size: 13px; color: #888; text-align: center; margin-bottom: 12px; }
@@ -84,46 +87,16 @@ h3 { color: #555; font-size: 15px; margin: 18px 0 8px; }
 .tag { display: inline-block; padding: 3px 9px; border-radius: 16px; font-size: 12px; font-weight: 500; }
 .tag-done { background: #e8f5e9; color: #2e7d32; }
 .tag-pending { background: #fff3e0; color: #e65100; }
-.person-card {
-  background: #fafafa; border-radius: 12px; padding: 16px 20px;
-  margin-bottom: 12px; border: 1px solid #eee; cursor: pointer;
-  transition: all 0.2s; user-select: none;
-}
-.person-card:hover { border-color: #667eea; box-shadow: 0 2px 8px rgba(102,126,234,0.15); }
-.person-card .card-header { display: flex; justify-content: space-between; align-items: center; }
-.person-card .card-header h4 { font-size: 15px; color: #333; }
-.person-card .card-score { font-size: 20px; font-weight: 700; color: #667eea; white-space: nowrap; margin-left: 12px; }
-.person-card .card-detail {
-  display: none; margin-top: 12px; padding-top: 12px;
-  border-top: 1px solid #eee; font-size: 13px; color: #666; line-height: 1.8;
-}
-.person-card.open .card-detail { display: block; }
-.person-card .card-arrow { font-size: 12px; color: #aaa; transition: transform 0.2s; }
-.person-card.open .card-arrow { transform: rotate(180deg); }
 
 .btn-row { display: flex; gap: 10px; }
 .btn-row .btn { flex: 1; }
 
-/* Modal editor + lightbox */
-.modal {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-  display: none; align-items: center; justify-content: center; z-index: 998; padding: 20px;
-}
-.modal-box {
-  background: #fff; border-radius: 16px; padding: 24px;
-  width: 100%; max-width: 520px; max-height: 92vh; overflow-y: auto;
-}
-.modal-box h3 { text-align: center; margin-bottom: 16px; color: #333; }
 .lightbox {
   position: fixed; inset: 0; background: rgba(0,0,0,0.88);
   display: none; align-items: center; justify-content: center; z-index: 999; cursor: zoom-out;
 }
 .lightbox img { max-width: 92vw; max-height: 92vh; border-radius: 8px; }
-.preview-img { max-width: 170px; max-height: 170px; border-radius: 8px; margin-top: 8px; display: block; border: 1px solid #eee; }
-.preview-wrap { margin-top: 4px; }
-.link-btn { background: none; border: none; color: #c0392b; font-size: 13px; cursor: pointer; text-decoration: underline; padding: 0; }
 
-/* Toast */
 #toast {
   position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
   background: #2e7d32; color: #fff; padding: 10px 22px; border-radius: 24px;
@@ -156,8 +129,29 @@ h3 { color: #555; font-size: 15px; margin: 18px 0 8px; }
   <div id="view-submit" style="display:none;">
     <h1>📝 综合测评材料申报</h1>
     <div class="current-user" id="current-user-info"></div>
-    <p class="subtitle" style="margin-bottom:14px;">请按模块申报加分/扣分项目并上传佐证材料，可反复提交修改</p>
-    <div id="submit-content"><div class="loading">加载中…</div></div>
+
+    <div class="form-group">
+      <label>📄 文字区</label>
+      <textarea id="submit-text" placeholder="请填写申报说明 / 材料文字…"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>🖼️ 图片区（可多张）</label>
+      <input type="file" id="submit-file" accept="image/*" multiple>
+      <div class="img-grid" id="submit-images"></div>
+    </div>
+
+    <div class="form-group">
+      <label>❓ 疑问点</label>
+      <textarea id="submit-question" placeholder="如有不确定 / 有疑问的地方，请写在这里（管理员会查看）"></textarea>
+    </div>
+
+    <button class="btn btn-primary" id="btn-submit" onclick="handleSubmit()">提 交</button>
+    <p class="error-msg" id="submit-error"></p>
+
+    <h2>📄 我的历史提交</h2>
+    <div id="submit-history"><div class="loading">加载中…</div></div>
+
     <button class="btn btn-secondary" onclick="goToLogin()">返回登录</button>
   </div>
 
@@ -184,37 +178,6 @@ h3 { color: #555; font-size: 15px; margin: 18px 0 8px; }
     <button class="btn btn-secondary" onclick="goToLogin()">返回登录</button>
   </div>
 
-</div>
-
-<!-- Entry editor modal -->
-<div class="modal" id="editor-modal">
-  <div class="modal-box">
-    <h3 id="editor-title">添加条目</h3>
-    <div class="form-group">
-      <label>子类别</label>
-      <select id="ed-cat"></select>
-    </div>
-    <div class="form-group">
-      <label>事由 / 描述</label>
-      <input type="text" id="ed-title" placeholder="例如：校级篮球赛一等奖">
-    </div>
-    <div class="form-group">
-      <label>申请分值（可空）</label>
-      <input type="text" id="ed-score" placeholder="例如：3">
-    </div>
-    <div class="form-group">
-      <label>文字说明（可空）</label>
-      <textarea id="ed-text" placeholder="补充说明…"></textarea>
-    </div>
-    <div class="form-group">
-      <label>图片佐证（可空）</label>
-      <input type="file" id="ed-file" accept="image/*">
-    </div>
-    <div class="preview-wrap" id="ed-preview"></div>
-    <button class="btn btn-primary" id="btn-save-entry" onclick="saveEntry()">保 存</button>
-    <button class="btn btn-secondary" onclick="closeEditor()">取 消</button>
-    <p class="error-msg" id="ed-error"></p>
-  </div>
 </div>
 
 <!-- Lightbox -->
@@ -245,17 +208,6 @@ async function supabaseInsert(table, row) {
   });
   if (!res.ok) throw new Error((await res.json()).message || res.statusText);
 }
-async function supabaseUpsert(table, rows) {
-  const res = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
-    method: 'POST',
-    headers: {
-      'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Content-Type': 'application/json', 'Prefer': 'resolution=merge-duplicates'
-    },
-    body: JSON.stringify(rows)
-  });
-  if (!res.ok) throw new Error((await res.json()).message || res.statusText);
-}
 async function supabaseDelete(table, id) {
   const res = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + id, {
     method: 'DELETE',
@@ -280,32 +232,19 @@ const ROSTER = [
 const NAME_TO_ID = Object.fromEntries(ROSTER);
 const ALL_NAMES = ROSTER.map(r => r[0]);
 
-const MODULES = [
-  { key:'dev1', group:'发展性素质', title:'身心素养方面', cats:['体育成绩加分（跑步打卡）','体育活动类加分','辩论赛类加分','扣分'] },
-  { key:'dev2', group:'发展性素质', title:'社会工作方面', cats:['学生干部加分'] },
-  { key:'dev3', group:'发展性素质', title:'实践活动方面', cats:['社会实践类加分','志愿服务类加分','文艺活动（含征文）加分'] },
-  { key:'dev4', group:'发展性素质', title:'创新创业活动方面', cats:['基础知识类竞赛加分','科技竞赛加分','学术专长加分（论文）','取得专利加分','大学生创新创业训练计划类加分','创业类比赛加分','参加科技报告、讲座等活动加分'] },
-  { key:'ideo1', group:'思想政治素质', title:'评议加分', cats:['所获荣誉称号','党员和入党积极分子评议'] },
-  { key:'ideo2', group:'思想政治素质', title:'思想道德加分', cats:['校、院、班表彰','好人好事'] },
-  { key:'ideo3', group:'思想政治素质', title:'行为规范加分', cats:['青年大学习','学习生活习惯','网络素养'] },
-  { key:'ideo4', group:'思想政治素质', title:'扣分项', cats:['宿舍卫生','无故不参加校、院活动','不文明、不道德行为','诚信程度差','违反校规校纪','党员和入党积极分子评议'] },
-];
-
 const ADMIN_NAME = '张思浩';
 const ADMIN_ID = '000000';
 
-let currentUser = null;      // { name, id, mode: 'student'|'admin' }
-let myEntries = [];          // current student's entries
-let allRows = [];            // admin cache
-let edModule = null;         // module key being edited
-let edId = null;             // entry id (null = new)
-let edImage = '';            // base64 data URL being edited
+let currentUser = null;   // { name, id, mode: 'student'|'admin' }
+let myEntries = [];       // current student's submissions
+let allRows = [];         // admin cache
+let draftImages = [];     // data URLs awaiting submit
 
-// Init datalist
+// Init datalist + file input
 (function(){
   const dl = document.getElementById('name-list');
   ALL_NAMES.forEach(n => { const o = document.createElement('option'); o.value = n; dl.appendChild(o); });
-  document.getElementById('ed-file').addEventListener('change', onFileChange);
+  document.getElementById('submit-file').addEventListener('change', onFilesChange);
 })();
 
 // ===== HELPERS =====
@@ -339,8 +278,6 @@ function openLightbox(src) {
   document.getElementById('lightbox').style.display = 'flex';
 }
 function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
-function showModal(id) { document.getElementById(id).style.display = 'flex'; }
-function hideModal(id) { document.getElementById(id).style.display = 'none'; }
 
 function compressImage(file, maxDim = 1200, quality = 0.7) {
   return new Promise((resolve, reject) => {
@@ -366,6 +303,14 @@ function compressImage(file, maxDim = 1200, quality = 0.7) {
   });
 }
 
+// Parse image_data (JSON array, with fallback to single string)
+function parseImages(data) {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  try { const a = JSON.parse(data); return Array.isArray(a) ? a : [data]; }
+  catch(e) { return [data]; }
+}
+
 // ===== VIEW 1: LOGIN =====
 function handleLogin() {
   const name = document.getElementById('login-name').value.trim();
@@ -387,129 +332,107 @@ function handleLogin() {
 
 // ===== VIEW 2: SUBMISSION =====
 async function loadMyEntries() {
-  myEntries = await supabaseGet('submissions?student_id=eq.' + currentUser.id + '&select=*&order=id.asc');
+  myEntries = await supabaseGet('submissions?student_id=eq.' + currentUser.id + '&select=*&order=id.desc');
 }
 async function goToSubmit() {
   showView('view-submit');
   document.getElementById('current-user-info').textContent =
     '当前申报人：' + currentUser.name + '（' + currentUser.id + '）';
-  document.getElementById('submit-content').innerHTML = '<div class="loading">加载中…</div>';
-  try { await loadMyEntries(); renderSubmission(); }
-  catch(e) { document.getElementById('submit-content').innerHTML = '<div class="loading">加载失败: ' + esc(e.message) + '</div>'; }
+  resetDraft();
+  document.getElementById('submit-history').innerHTML = '<div class="loading">加载中…</div>';
+  try { await loadMyEntries(); renderHistory(); }
+  catch(e) { document.getElementById('submit-history').innerHTML = '<div class="loading">加载失败: ' + esc(e.message) + '</div>'; }
 }
 
-function renderSubmission() {
-  const el = document.getElementById('submit-content');
-  let h = '', lastGroup = '';
-  MODULES.forEach(m => {
-    if (m.group !== lastGroup) { h += '<h2>' + m.group + '</h2>'; lastGroup = m.group; }
-    const entries = myEntries.filter(e => e.module_key === m.key);
-    h += '<div class="module-card">';
-    h += '<div class="module-title">' + m.title + '</div>';
-    h += '<div class="module-sub">' + m.cats.map(esc).join(' · ') + '</div>';
-    if (entries.length === 0) h += '<div class="no-score">暂无条目</div>';
-    else entries.forEach(e => { h += renderEntryHTML(e, false); });
-    h += '<button class="btn btn-small btn-add" onclick="openEditor(\'' + m.key + '\')">＋ 添加条目</button>';
-    h += '</div>';
-  });
-  el.innerHTML = h;
+function resetDraft() {
+  draftImages = [];
+  document.getElementById('submit-text').value = '';
+  document.getElementById('submit-question').value = '';
+  document.getElementById('submit-file').value = '';
+  document.getElementById('submit-error').textContent = '';
+  renderDraftImages();
 }
 
-function renderEntryHTML(e, readonly) {
+function renderDraftImages() {
+  const el = document.getElementById('submit-images');
+  if (!draftImages.length) { el.innerHTML = ''; return; }
+  el.innerHTML = draftImages.map((src, i) =>
+    '<div class="thumb"><img src="' + src + '"><button class="x" onclick="removeDraftImage(' + i + ')">×</button></div>'
+  ).join('');
+}
+function removeDraftImage(i) { draftImages.splice(i, 1); renderDraftImages(); }
+
+async function onFilesChange(e) {
+  const files = Array.from(e.target.files || []);
+  if (!files.length) return;
+  const err = document.getElementById('submit-error');
+  err.textContent = '';
+  for (const f of files) {
+    try { draftImages.push(await compressImage(f)); }
+    catch(x) { err.textContent = '某张图片处理失败，请换一张试试'; }
+  }
+  e.target.value = ''; // allow re-selecting the same file
+  renderDraftImages();
+}
+
+async function handleSubmit() {
+  const err = document.getElementById('submit-error');
+  const btn = document.getElementById('btn-submit');
+  const text = document.getElementById('submit-text').value.trim();
+  const question = document.getElementById('submit-question').value.trim();
+  if (!text && !draftImages.length && !question) {
+    err.textContent = '请至少填写文字、上传图片或填写疑问点';
+    return;
+  }
+  const row = {
+    student_id: currentUser.id,
+    student_name: currentUser.name,
+    text_content: text,
+    image_data: draftImages.length ? JSON.stringify(draftImages) : null,
+    question: question
+  };
+  btn.disabled = true; btn.textContent = '提交中…'; err.textContent = '';
+  try {
+    await supabaseInsert('submissions', row);
+    resetDraft();
+    await loadMyEntries(); renderHistory();
+    toast('✓ 已提交');
+  } catch(e) { err.textContent = '提交失败: ' + e.message; }
+  finally { btn.disabled = false; btn.textContent = '提 交'; }
+}
+
+function renderHistory() {
+  const el = document.getElementById('submit-history');
+  if (!myEntries.length) { el.innerHTML = '<div class="no-score">暂无提交记录</div>'; return; }
+  el.innerHTML = myEntries.map(renderRecordHTML).join('');
+}
+
+function renderRecordHTML(e, readonly) {
+  const imgs = parseImages(e.image_data);
   let h = '<div class="entry-item">';
-  h += '<div><span class="entry-cat">' + esc(e.category) + '</span>';
-  if (e.score_claim) h += '<span class="entry-score">分值：' + esc(e.score_claim) + '</span>';
-  h += '</div>';
-  if (e.title) h += '<div class="entry-title">' + esc(e.title) + '</div>';
   if (e.text_content) h += '<div class="entry-text">' + esc(e.text_content) + '</div>';
-  if (e.image_data) h += '<img class="entry-img" src="' + e.image_data + '" loading="lazy" onclick="openLightbox(this.src)">';
+  if (imgs.length) {
+    h += '<div class="img-grid">' +
+      imgs.map(src => '<img class="entry-img" src="' + src + '" loading="lazy" onclick="openLightbox(this.src)">').join('') +
+      '</div>';
+  }
+  if (e.question) h += '<div class="q-box"><b>❓ 疑问点：</b>' + esc(e.question) + '</div>';
+  if (e.created_at) {
+    const d = new Date(e.created_at);
+    if (!isNaN(d)) h += '<div class="entry-meta">提交于 ' + d.toLocaleString('zh-CN') + '</div>';
+  }
   if (!readonly) {
-    h += '<div class="entry-actions">';
-    h += '<button class="btn btn-small" onclick="editEntry(' + e.id + ')">编辑</button>';
-    h += '<button class="btn btn-small btn-del" onclick="deleteEntry(' + e.id + ')">删除</button>';
-    h += '</div>';
+    h += '<div class="entry-actions"><button class="btn btn-small btn-del" onclick="deleteEntry(' + e.id + ')">删除</button></div>';
   }
   h += '</div>';
   return h;
 }
 
-// ---- Entry editor ----
-function openEditor(moduleKey, entry) {
-  edModule = moduleKey;
-  edId = entry ? entry.id : null;
-  edImage = entry && entry.image_data ? entry.image_data : '';
-  const m = MODULES.find(x => x.key === moduleKey);
-  document.getElementById('editor-title').textContent = (entry ? '编辑条目 — ' : '添加条目 — ') + m.title;
-  const sel = document.getElementById('ed-cat');
-  sel.innerHTML = m.cats.map(c => '<option>' + esc(c) + '</option>').join('');
-  sel.value = entry && entry.category ? entry.category : m.cats[0];
-  document.getElementById('ed-title').value = entry ? (entry.title || '') : '';
-  document.getElementById('ed-score').value = entry ? (entry.score_claim || '') : '';
-  document.getElementById('ed-text').value = entry ? (entry.text_content || '') : '';
-  document.getElementById('ed-file').value = '';
-  document.getElementById('ed-error').textContent = '';
-  renderEdPreview();
-  showModal('editor-modal');
-}
-function closeEditor() { hideModal('editor-modal'); edModule = null; edId = null; edImage = ''; }
-
-function renderEdPreview() {
-  const el = document.getElementById('ed-preview');
-  if (!edImage) { el.innerHTML = ''; return; }
-  el.innerHTML = '<img class="preview-img" src="' + edImage + '">' +
-    '<button type="button" class="link-btn" onclick="removeEdImage()">移除图片</button>';
-}
-function removeEdImage() { edImage = ''; document.getElementById('ed-file').value = ''; renderEdPreview(); }
-
-async function onFileChange(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  try { edImage = await compressImage(file); renderEdPreview(); }
-  catch(err) { document.getElementById('ed-error').textContent = '图片处理失败，请换一张试试'; }
-}
-
-async function saveEntry() {
-  const err = document.getElementById('ed-error');
-  const btn = document.getElementById('btn-save-entry');
-  const cat = document.getElementById('ed-cat').value;
-  const title = document.getElementById('ed-title').value.trim();
-  const score = document.getElementById('ed-score').value.trim();
-  const text = document.getElementById('ed-text').value.trim();
-  if (!cat) { err.textContent = '请选择子类别'; return; }
-  if (!title && !text && !edImage) { err.textContent = '请至少填写事由/描述、文字说明或上传图片'; return; }
-
-  const row = {
-    student_id: currentUser.id,
-    student_name: currentUser.name,
-    module_key: edModule,
-    category: cat,
-    title: title,
-    score_claim: score,
-    text_content: text,
-    image_data: edImage || null
-  };
-  if (edId) row.id = edId;
-
-  btn.disabled = true; btn.textContent = '保存中…'; err.textContent = '';
-  try {
-    if (edId) await supabaseUpsert('submissions', [row]);
-    else await supabaseInsert('submissions', row);
-    closeEditor();
-    await loadMyEntries(); renderSubmission();
-    toast('✓ 已保存');
-  } catch(e) { err.textContent = '保存失败: ' + e.message; }
-  finally { btn.disabled = false; btn.textContent = '保 存'; }
-}
-
-async function editEntry(id) {
-  const e = myEntries.find(x => x.id === id);
-  if (e) openEditor(e.module_key, e);
-}
 async function deleteEntry(id) {
-  if (!confirm('确定删除这条申报吗？')) return;
+  if (!confirm('确定删除这条提交吗？')) return;
   try {
     await supabaseDelete('submissions', id);
-    await loadMyEntries(); renderSubmission();
+    await loadMyEntries(); renderHistory();
     toast('已删除');
   } catch(e) { alert('删除失败: ' + e.message); }
 }
@@ -548,7 +471,7 @@ async function renderAdmin2() {
   sel.innerHTML = '<option value="">请选择学生</option>' +
     ROSTER.map(r => '<option value="' + r[1] + '">' + esc(r[0]) + '（' + r[1] + '）</option>').join('');
   el.innerHTML = '<div class="loading">加载中…</div>';
-  try { allRows = await supabaseGet('submissions?select=*&order=id.asc'); }
+  try { allRows = await supabaseGet('submissions?select=*&order=id.desc'); }
   catch(e) { el.innerHTML = '<div class="loading">加载失败: ' + esc(e.message) + '</div>'; return; }
   el.innerHTML = '';
 }
@@ -559,12 +482,7 @@ function renderStudentDetail(id) {
   if (!rows.length) { el.innerHTML = '<div class="no-score">该学生暂无申报</div>'; return; }
   const name = ROSTER.find(r => r[1] === id)[0];
   let h = '<h2>' + esc(name) + '（共 ' + rows.length + ' 条）</h2>';
-  MODULES.forEach(m => {
-    const es = rows.filter(r => r.module_key === m.key);
-    if (!es.length) return;
-    h += '<h3>' + m.title + '（' + es.length + ' 条）</h3>';
-    es.forEach(e => { h += renderEntryHTML(e, true); });
-  });
+  h += rows.map(r => renderRecordHTML(r, true)).join('');
   el.innerHTML = h;
 }
 </script>
