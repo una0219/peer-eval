@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>综测加分确认系统</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(135deg, #2b5876 0%, #4e4376 100%);
+  min-height: 100vh;
+  padding: 24px 12px;
+}
+.container {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 28px 24px;
+  animation: fadeIn .3s ease;
+}
+@keyframes fadeIn { from { opacity:0; transform: translateY(10px);} to {opacity:1; transform:none;} }
+h1 { text-align:center; color:#333; font-size:26px; margin-bottom:6px; }
+.subtitle { text-align:center; color:#888; margin-bottom:26px; font-size:14px; }
+.form-group { margin-bottom:16px; }
+.form-group label { display:block; margin-bottom:6px; font-weight:600; color:#444; font-size:14px; }
+.form-group input, .form-group textarea, .form-group select {
+  width:100%; padding:12px 14px; border:2px solid #e0e0e0; border-radius:8px;
+  font-size:16px; transition:border-color .2s; outline:none; font-family:inherit;
+}
+.form-group input:focus, .form-group textarea:focus { border-color:#2b5876; }
+.form-group textarea { min-height:130px; resize:vertical; }
+.btn { padding:13px 20px; border:none; border-radius:8px; font-size:16px; font-weight:600; cursor:pointer; transition:all .2s; }
+.btn-primary { background:linear-gradient(135deg,#2b5876,#4e4376); color:#fff; width:100%; }
+.btn-primary:hover { opacity:.9; transform:translateY(-1px); }
+.btn-secondary { background:#f0f0f0; color:#555; }
+.btn-secondary:hover { background:#e4e4e4; }
+.error-msg { color:#e74c3c; text-align:center; margin-top:10px; font-size:14px; min-height:20px; }
+.current-user { background:#f4f7fb; border-left:4px solid #2b5876; padding:12px 16px; border-radius:0 8px 8px 0; margin-bottom:20px; font-size:15px; color:#444; }
+.current-user b { color:#2b5876; }
+.admin-link { text-align:center; margin-top:14px; }
+.admin-link a { color:#888; font-size:13px; text-decoration:none; }
+.admin-link a:hover { color:#2b5876; }
+.loading { text-align:center; color:#999; padding:20px; font-size:14px; }
+
+/* 表格 */
+.table-section { margin-bottom:30px; }
+.table-section h2 { font-size:17px; color:#333; margin-bottom:8px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+.btn-dl { display:inline-block; font-size:13px; color:#2b5876; text-decoration:none; border:1px solid #2b5876; padding:5px 12px; border-radius:20px; }
+.btn-dl:hover { background:#2b5876; color:#fff; }
+.table-wrap { overflow-x:auto; border:1px solid #e5e5e5; border-radius:8px; max-height:520px; overflow-y:auto; }
+.zctab { border-collapse:collapse; font-size:12px; white-space:nowrap; width:100%; }
+.zctab th, .zctab td { border:1px solid #e0e0e0; padding:6px 8px; text-align:center; }
+.zctab thead th { background:#eef2f8; color:#333; font-weight:700; position:sticky; top:0; z-index:2; }
+.zctab tbody td { color:#444; }
+.zctab tbody tr:nth-child(even) { background:#fafbfd; }
+.zctab tr.me td { background:#fff3cd !important; font-weight:600; }
+.zctab tr.me td:first-child::after { content:" ⬅"; color:#d68910; }
+.legend { font-size:12px; color:#888; margin-top:6px; }
+
+/* 底部动作 */
+.actions { display:flex; gap:12px; flex-wrap:wrap; margin-top:26px; }
+.actions .btn { flex:1; min-width:140px; }
+.btn-ok { background:#27ae60; color:#fff; }
+.btn-bad { background:#e74c3c; color:#fff; }
+.btn-warn { background:#f39c12; color:#fff; }
+
+/* 图片区 */
+.img-preview { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+.img-item { position:relative; width:110px; height:110px; border:1px solid #e0e0e0; border-radius:8px; overflow:hidden; }
+.img-item img { width:100%; height:100%; object-fit:cover; }
+.img-item .del { position:absolute; top:2px; right:2px; width:22px; height:22px; background:rgba(0,0,0,.6); color:#fff; border:none; border-radius:50%; cursor:pointer; font-size:14px; line-height:22px; text-align:center; }
+
+/* 管理员 */
+.cards { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+.card { flex:1; min-width:130px; border-radius:10px; padding:16px; color:#fff; text-align:center; }
+.card .num { font-size:30px; font-weight:700; }
+.card .lbl { font-size:13px; opacity:.9; }
+.card.ok { background:#27ae60; } .card.bad { background:#e74c3c; }
+.card.warn { background:#f39c12; } .card.none { background:#95a5a6; }
+.admin-table-wrapper { overflow-x:auto; }
+.admin-table { width:100%; border-collapse:collapse; font-size:13px; }
+.admin-table th, .admin-table td { padding:10px 8px; text-align:center; border-bottom:1px solid #eee; }
+.admin-table th { background:#eef2f8; color:#555; font-weight:700; }
+.admin-table tbody tr { cursor:pointer; }
+.admin-table tbody tr:hover { background:#f4f7fb; }
+.badge { display:inline-block; padding:3px 10px; border-radius:12px; font-size:12px; color:#fff; }
+.badge.ok { background:#27ae60; } .badge.bad { background:#e74c3c; }
+.badge.warn { background:#f39c12; } .badge.none { background:#95a5a6; }
+.detail-back { margin-bottom:14px; }
+.sub-card { background:#fafafa; border:1px solid #eee; border-radius:10px; padding:16px; margin-bottom:14px; }
+.sub-card .head { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.sub-card .time { color:#999; font-size:12px; }
+.sub-card .txt { font-size:14px; color:#333; white-space:pre-wrap; line-height:1.7; }
+.sub-card .imgs { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.sub-card .imgs img { width:120px; height:120px; object-fit:cover; border-radius:6px; border:1px solid #e0e0e0; cursor:zoom-in; }
+.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.8); z-index:99; align-items:center; justify-content:center; }
+.modal img { max-width:92vw; max-height:92vh; border-radius:6px; }
+.modal.show { display:flex; }
+.back-row { margin-top:18px; }
+</style>
+</head>
+<body>
+<div class="container" id="container">
+
+  <!-- View 1: 登录 -->
+  <div id="view-login">
+    <h1>📋 综测加分确认</h1>
+    <p class="subtitle">请选择姓名并输入学号，核对本人综测加分情况</p>
+    <div class="form-group">
+      <label for="login-name">姓名</label>
+      <input type="text" id="login-name" list="people-names" placeholder="选择或输入姓名" autocomplete="off">
+      <datalist id="people-names"></datalist>
+    </div>
+    <div class="form-group">
+      <label for="login-id">学号</label>
+      <input type="text" id="login-id" placeholder="请输入学号" autocomplete="off">
+    </div>
+    <button class="btn btn-primary" onclick="handleLogin()">确 认</button>
+    <p class="error-msg" id="login-error"></p>
+    <div class="admin-link"><a href="javascript:void(0)" onclick="toggleAdminHint()">管理员登录</a></div>
+    <p class="subtitle" id="admin-hint" style="display:none;">管理员请直接输入管理员姓名与学号登录</p>
+  </div>
+
+  <!-- View 2: 查看表格 -->
+  <div id="view-tables" style="display:none;">
+    <h1>📄 本人综测加分核对</h1>
+    <div class="current-user" id="current-user-info"></div>
+
+    <div class="table-section">
+      <h2>① 思想政治素质加分申请汇总表
+        <a class="btn-dl" href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,UEsDBAoAAAAAAIdO4kAAAAAAAAAAAAAAAAAJAAAAZG9jUHJvcHMvUEsDBBQAAAAIAIdO4kD5C3n/OwEAAG8CAAAQAAAAZG9jUHJvcHMvYXBwLnhtbJ2SzUoDMRSF94LvELKv6Y+IlJkUQcWNWLC6j5k7bWAmCbnXofVZ3LgQfANXvo2Cj2FmAnUqunF3knM4fCckm63rijUQ0Dib89HBkDOw2hXGLnN+szgfHHOGpGyhKmch5xtAPpP7e9k8OA+BDCCLFRZzviLyUyFQr6BWeBBtG53ShVpRPIalcGVpNJw6fV+DJTEeDo8ErAlsAcXAbwt5apw29N/SwumWD28XGx+BZXbifWW0orhSXhodHLqS2NlaQ5WJvpldgGrHz5UJKLOGpg1ocoGheYjzx5zdKYS2NueNCkZZivVtLB06XXmkID9en9/fHj+fXjIR/XTXyX60r82hnHSBKHaDbUHiiMYu4cJQBXhVzlWgX4AnfeCOIeEmnOsVAI36fFvSzhr/bSXS/qrunSLfDyLx/VPkF1BLAwQUAAAACACHTuJAwIanPUUBAABXAgAAEQAAAGRvY1Byb3BzL2NvcmUueG1sfZLNTsMwEITvSLxD5HtiJy39sZJUAtQTlZAoAnGz7G0biB3LdknL0+MkbUgF4rg7429nV04XB1kGn2BsUakMxRFBASheiUJtM/S8XoYzFFjHlGBlpSBDR7BokV9fpVxTXhl4NJUG4wqwgScpS7nO0M45TTG2fAeS2cg7lBc3lZHM+dJssWb8g20BJ4RMsATHBHMMN8BQ90R0QgreI/XelC1AcAwlSFDO4jiK8Y/XgZH2zwetMnDKwh213+kUd8gWvBN798EWvbGu66getTF8/hi/rh6e2lXDQjW34oDyVHDKDTBXmfxr857iQd3crmTWrfyZNwWI22O+VyzFv9ue0obuUCACH4N2oc/Ky+jufr1EeUISEpJ5SMbreEpHc0rIWzP14n0Tq2vI0+z/iZOQzMJkso7H9GZK4/mAeAbkbe7Lr5B/A1BLAwQUAAAACACHTuJAXEbJSv4AAACAAQAAEwAAAGRvY1Byb3BzL2N1c3RvbS54bWydkE1LxDAURfeC/yFkn+ZDqtOSdrDtzMaFguPsS5rOBJqkJGm1iP/dlNFx7/JxH4dzL99+6AHM0nllTQFpQiCQRthOmVMB3w57tIHAh9Z07WCNLOAiPdyWtzf8xdlRuqCkBxFhfAHPIYw5xl6cpW59EmMTk9463YZ4uhO2fa+EbKyYtDQBM0LusZh8sBqNVxy88PI5/BfZWbHa+eNhGaNuyX/gC+h1UF0BP5u0bpqUpIjtshpRQiuU3WUPiGwIYRWr99nj7guCcX1mEJhWx+pPr88R200iVJMauqN0ET2HfBjffXAlIylDlCZxw4QSQjKO/0KOfx1Kjle5y3TlN1BLAwQKAAAAAACHTuJAAAAAAAAAAAAAAAAAAwAAAHhsL1BLAwQKAAAAAACHTuJAAAAAAAAAAAAAAAAADgAAAHhsL3dvcmtzaGVldHMvUEsDBBQAAAAIAIdO4kCFb1A+yhkAAIuTAAAYAAAAeGwvd29ya3NoZWV0cy9zaGVldDEueG1spZ1Zc9tIsoXfJ2L+g0KP16GFm7awPcEN3CXu2xtbpm1FS6JGotvd8+tvYjkJMk+SMrtfbPmrxEFlIQ+qgKLMj//58+nx6I/l69vD6vnTceb0/Pho+Xy/+vLw/O3T8WgYnFwdH72tF89fFo+r5+Wn47+Wb8f/+fzvf338uXr9/e37crk+EoXnt0/H39frl5uzs7f778unxdvp6mX5LC1fV69Pi7X88/Xb2dvL63LxJTro6fEse35+cfa0eHg+jhVuXn9FY/X168P9srK6//G0fF7HIq/Lx8Va+v/2/eHlDWp/fvklvS+vi5+SK/qz0cVK3KJ6mTz17+nh/nX1tvq6Pr1fPZ3FXeMsr8+ut/J8uichZ7CeFq+//3g5EeEXSe63h8eH9V9RuujQcp3q/Pz58/Tny9vp/XPSi40BylyeLdflH2/r1VNlsV4cf/4YXYHu69nnj18eZBTDS3/0uvz66biYuSkG+cyxtEQx44flz7eNn4/Wi98Gy8fl/Xr5RYrl+Oh/q9XT4H7xKIWRl8rRf96GV/0xhuvVS3v5dV1ePgoo5o+Pwsr5bbX6PVRviM552KVINezI4n798Mcyia5ls1J+/407F/5DenamXdv8Gd0Monrrvh59WX5d/Hhcl1ePk4cv6++fjq+Pwfqrn/Xlw7fva8khd1oIRe9Xj6Igfx49PYgP5KxPiz+jv3/GR2cuTq+u8teFwmUhm81kJY239V9h3jIK99HgJqeJRk+FJC4SCtNOhLKnF7nLzMVVJp8pXGelV78kVEiE5G8IFU4vL68uLzLnF5nr/MWvCl0kQvJ3InRxGmaUu7rOXZ0XcvvzuUyOlr/RjcxpPCSJwN7hkJtJNBzy9984uaQYHS1/4+R/bwwyUquRUviDdgQDeZ69KOR/dTgzMl6xlPzwD3uFqsvID4nUlb3Ge2otk0NX5Ad05dwK/FK1ZVC34Q+J1OXfU0LhZv5x5WZQuuEPu8bn19JDGWc26jh/CnNHlfyLvsygpMNbwj/qVBYjFf6Ay5c7zRcyuexlPpe7yF7Jdf2l/LIYqfCHf9YpjFR2a6Ti3mSuClf5c2n4tU5hpHJ7ynuf0ll8k45u/+FM9vnj6+rnkczy4rzwXp7euvTuLl17WYSLk8yNnFVu8GF4UeIFSS/koDehf3w+/3j2h8wm90lEiSMy2xFljshuR1Q4IrcdUeWI/HZEEEfkohkq7HrNgroFDQuaFrQsaFvQseDWgjsLuhb0LOhbMLBgaMHIgrEFEwumFswsmFtQTOohHeVicv03SHK9Zb4IFwtRFTkXuLB9+YrOFb4wIckl3izGSw05kwLXKpeQsMrzcneIJ4F3qlzipcrz2uGSBWULKhZUYyBnVKdcaeeiUQjiiHSkahbULWjEQG4bKnq9Ldq0h7QsaMdg43J0WDVjXH1rVe4s6JJsLyFy59XeZsy9oJ/EpEM9IDIkMiIyJjIhMiUyIzInUiwySspBJnit6KQgJDbN1dzVilQjxaRINnSSoojIVgnLKEYlfC6L7l8r4nDG+3R8oX0sWVC2oGJBNQab9ZYxd+LACTG34poTYuxej0M23ZIxKg1HxdwRmk6IUWk5IelNI/Jl2wkxKp04JFzAppfb2Pv2fZm7RGaraoyhu+/L9Dgka/zb5xBrxQGHZI1bhxxiVUYckjU+GHOIVZlwSNbU3ZRDrMqMQ7LmQs45xKoUi06MKd9i4q0to5jBK5LdiuS3YmK41LTFxF8R2bohyJr5oDlN4uV2cBWt2UzXSmhLqzlrMiw7IcZ9FSfEWKuKENw3AwtqFtQtaFjQtKBlQduCDsBGwta+CAnXuHY6vEMj8uha0LOgb8HAgqEFIwvGFkwsmFows2BuQbFIROsB6RWTyy8Pop8/fv0c5D/U8x+a+Q/t/Ifb/Idu/qSfPxnmT8b5k2n+ZJ4/KZbEZ1+9kStqlah2UhSxdnRBvi9el1+Ok/dq1fxNsSov1o7eHqL3XaLwQfqzSz+pqF1qgaiFr+kitczxZ5H+v/NT8UPcW11MbVlNpqWDrCbxYrXryGrm5ldC20blWas5IWZSqHBIztzxqwjBOAcW1CyoW9CwoGlBy4K2BR2AjYSt1RDiFcwdGtPjc+b21UVIdLxewmgy76ENw9C3YGDB0IKRBWMLJhZMLZhZMLegWCSixYLOF8txzK7qLhduxBpJdctDe1D4UC98aBY+tAsfbgsfuoWTfuFkWDgZF06mhZN5QYwqxReXvhnUotaYnjwpKT557EyJkzullUnKzj8oeuErB4UGTF4ibBlPXsEcZDyJ1znOrBdKaEvriOY4DskZ+1acEHOiKkIwboEFNYC0KzmzLqkjJBxT04cG2nCCpgUtC9oWdADSLmStKxHiuhKN6EPXgp4FfQsGFgwtGFkwtmBiwdSCmQVzC4pFIlosSK9YjmP8Mo72VqSMzYUqarWoTFIcvkz0gsSRSQrIP0gtlJ58y0KyJD3IQhKvc5cpyhLaNorGzl0ckjMhFSfErCSrCMG4BRbULKhb0LCgaUHLgrYFHYCNhK1LEOK6BI3Io2tBz4K+BQMLhhaMLBhbMLFgasHMgrkFxSIRrQekVyzHMX6lwiVmoVLUglCZ5Pr7MnCJlUlqxD8ILvGnGXm7fpBHJF6nGVPdJbRtlIwJKXNIzjwnVZwQU3hVhGDUAgtqFtQtaFjQtKBlQduCDsBGwqartwhxPYJG5NG1oGdB34KBBUMLRhaMLZhYMLVgZsHcgmKRiNYD0isml9+v050eIeHk+vsyOz0Sy/gH7feIbOoe5JFwExjPQOb2XkLbRslYj3BIzj4DcUje3BOqCMHgBxbUANKu0FIMId5SDG04QdOClgVtCzoAaRdoKYYQ10BoRB+6FvQs6FswsGBowciCsQUTC6YWzCyYW1AsEtFiQXrFchzjFzEMlK6Gkh0nEk6Kw5eBgaxMUkD+QTDQaXrU1lIs/MTEQR4KD9CJxkwRJW3cqBvrIicmnz5qRSNT8WLSBKKYqsbgIgREakTqRBpEmkRaRNpEOkrS3PPmMexWY0LTmIG500Yk1CXSI9InMlCy0RGzah5qTNgR0zjSRnRkTGRCZEpkRmRORDZrUU84mezWEionyK9x+EsXUom9WAdF4+vAYEYHdeUflBgsel/nvS4I92MOM1j4qgSzlFm1lEK1qDG9tvTGwInJm1qreDFmRqxqDK5MQKRGpE6kQaRJpEWkTaSjZCN3Mz63GuPOStqKjLpEekT6RAZEhkRGRMZEJkSmRGZE5kTERCgLJCYmIlROkF/HMJFZrhTTUlFtVIYvBBdZIVSPfxTmKfXe9iwlu5GHmSjeII93lswirRR+Hi+awjYKyRik7MTkzWxX8WJMQVY1BqMXEKkpSfuTN32ua0xY2GZaaWgjTtIk0iLSJtJRknaEln0a4zsMQ4uedDUepEekT2RAZEhkRGRMZEJkSmRGZE5EHGYTE4cRQtX4JQ6HmasnDiMhlI0vBIdZIZSWfxQcdpoetu0x2VI+zGPxHnS8pWR3I0vhp1ffnak4pmBuGxVHp2CWi1WNQY0FRGpE6kQaRJpEWkTaRDpKUh/xUhC5hz4yd587FUBCXSI9In0iAyJDIiMiYyITIlMiMyJzImIjZI3ExEaEygny6zixkRkycRHpoC58ncRFVgel4x+kq730sG0Tyb71YSbCRnd0OzWFXQo/rv3uTMUxBfOsVHF0CultIHmegg4uTaBHgdSI1Ik0iDSJtIi0iXSU7DMR+uyaCI3oflclQXpE+kQGRIZERkTGRCZEpkRmROZExEQ2MTERoXKC/DreaSLSqe7V2WmiWMc/+bsmkg3lw0yEXerIRKb4S9KJ92cijimYx+KKo1NIbwOJiaCDCgv0KJCako3CpuUedMKMjFMbKgDJJpEWkTaRjpK0I7zc2+yIneTvVAE96RLpEekTGRAZEhkRGROZEJkSmRGZExGLIW0kJhYjVE6Q/CWfQIoGMfmUUPjhg93LPRKq7hXavdyLhfzTv7vck83jw0yGHenIZKYmS+Hv8Lw7U3FMwbx0qDg6BfPcVdUYXJyASI1InUiDSJNIi0ibSEfJPh8h92j0zCL3ThWQUZdIj0ifyIDIkMiIyJjIhMiUyIzInIj4CGkjMfERoXKC/EKGj8yYyYKPhFAZvhB8ZIVQPf5R8NGOFxOyuXyYi7BjHdWBmWJK4e+vvfvQxDEF89ah4ugUzBRT1RhcmoBIjUidSINIk0iLSJtIR8k+FyF330VoRUZd1QTpEekTGRAZEhkRGROZEJkSmRGZExEX2cTERYTKCfLLeLeLSAiV4QvtdlEs5B/1jotkC/gwF2HrOaoDswgrhb/D+e5cxDEX5sZQcXQuzBNaVWNQYQGRGpE6kQaRJpEWkTaRjpJ9LkLuvovQioy6qgnSI9InMiAyJDIiMiYyITIlMiMyJyIusomJiwiVE+SX8W4XkRAqwxfa7aJYyD/qHRfJdvJhLsL+c1QHZiVWyqB1o5KM08pOzIV5/Kp4MWb1WPVizNwYaEzYWzPh1bQx7Sy/QkdCoYDpQUMFUONNIi0ibSIdJRsdMee61ZiwI2ZI77QRHekS6RHpExkQGRIZERkTmRCZEpkRmRMR+2H4kZjYjxAqyq9/2M+UqiwFSQgl5QvBflYIReYfBfudpodtvfzLHvpZivCAaKKKDGgec0rampYS7fU6MRemoipeTJpB/N5CY3BxAiI1InUiDSJNIi0ibSIdJRu5G8/fakw0embyvtNWZNQl0iPSJzIgMiQyIjImMiEyJTIjMiciv/qLokFixbRSFJWTKL+Q4SMzZvLLwKRd3SsEH1khVI9/evjIf6TKysb1QdNYeED00BTVgamSkrZuVJJxSNmJuTBurHgx5lxVjcF1CIjUiNSJNIg0ibSItIl0lGzkbvp8qzG+izC2yKir8SA9In0iAyJDIiMiYyITIlMiMyJzIuIim5i4iBAKwy/j3S4iIVSGL7TbRbGQf9Q7LpI95cNchE3oqA7My4JSFq0blUQu4pgLo1NxdC7NzaPqxFzYxaDGhL01JR3/J2PhrxWnnaXF4JaAWaA1tBE13iTSItIm0lGSdoResGuM7z+MKXrS1XiQHpE+kYGStCd5M6ZDjQl7YlbxI23EacdEJkSmRGZE5kTEnDZrMSehcoJ8d8CcpgBliiMhFJwvBHNaoWDv6WHO0/Sw7aWibFYfZk/sbkcXx1imlEVrenl5qcgxl+ZtRsXRuTSVUNUYVEJApKYk7Q87EP0JMyIHohEnaaokSItIm0hHSdoRdiDO5TsQrThvVzVBekT6RAZEhkRGRMZEJkSmRGZE5kTEZDYxMRmhcoJ8b8Bk5uqJyUgIZeMLwWRWCKXlH6UmSw/bNplsQh9mMux+RyYz5ihl0bpRSzQHcsxl2rvoWavi6Fyae3HVieE5EOcKe0tzIBrTztIvkehJonR1NR71sqGNqPImkRaRNpGOkrQj9FkojQk7Yob0ThtTgUsT09WYUMBct542IpM+kQGRIZERkTGRCZEpkRmRORFxJ64fOi3uJFROkG8PuNM864s7SQj15gvBnVYo2Ht6dWd62LY7Zff6MHdi3zwqVzMtlcL/ZfG9rTMn5jLtXeJO1rk0z4JVR4fdCZ2wt+RONOLq1lUSpEGkSaRFpE2koyT1D0+B6E/kH7O6uFMF9K1LpEekT2RAZEhkRGRMZEJkSmRGZE5ETIa0kZiYjFA5Qb43YDJzhcVkJISy8YVgMisU7D29miw9bNtkskd+mMmwqR6ZzExdpSxaN2rJ3IvLTsxl2rvEZKxzma6Uo5iq6uDiBERqROpEGkSaRFpE2kQ6SjZyN3ndaozvI2SNjLoaD9Ij0icyIDIkMiIyJjIhMiUyIzInIj6yiYmPCKEw/PKHj8y9R3xEQqgMXwg+skKoHv8o+EgXQdsukq3tw1yETfXIRWZxVwr/7913pyqOuTIpVRydK7P4qWoMKiwgUiNSJ9Ig0iTSItIm0lGyz0XI3XcRWpFRVzVBekT6RAZEhkRGRMZEJkSmRGZE5kTERTYxcRGhcoL8Mt7tIhJCZfhCu10UC/lHveMieSF3mIuwqR65yMwzpSxaNyrJxJSdmCuzcKx4MWbeq2oMKiwgUlOS9oefuNDnKCO92SRPXGjESZoqCdIi0ibSUZJ2hJ+4cK6wI2bU7lQAp+0S6RHpExkQGRIZERkTmRCZEpkRmRMRhyFrJCYOI4Si8Us8cZh5IpBpinRQNL5OYjCrg7ryD0r8Jd8BoKWzPU/JNvhhDsO+eVSP5lGolEVrWkj8VpFjrsx8V3F0rkzNVTUGlyYgUiNSJ9Ig0iTSItIm0lGykTut9pB7OHr02XhVQEZdIj0ifSIDIkMiIyJjIhMiUyIzInMi4iKkjcTERYTKCfILefc8RUKoDF9o9zwVC/lH7Z+ncod+jCM8QD/GkU29Gd3WS9q6UUmm+stOzJVxY8WLMeeqagwuTUCkRqROpEGkSaRFpE2koyTNnaYijfGmIm1EQl0iPSJ9IgMiQyIjImMiEyJTIjMicyLy/zejZpCY/HfNhFAXfhUnJjK1JP+BM+mgLnydxENWB6XjH6RTUXrY1lQUfnnHQVNReIB+isO+oCppa1pINBU5MVfmll3xYuyLB43BpQmI1JSk/aENLo0JC9usKBvaiJM0ibSItIl0lKQdsYN3qzHuPKWt6EmXSI9In8iAyJDIiMiYyITIlMiMyJyIWAwVhcTEYoTKCfKrHPOUuXriMRKq7hXCPGWFUFr+6TFPnaaHbZtM9rIPMxk2v8NKyJrCL8lX6sTz2EYtpfaOZrOyE3Nt30t4Mfa9hMbg4gREakTqRBpEmkRaRNpEOkrS3Hmmwvi4MxUakVBXJUF6RPpEBkSGREZExkQmRKZEZkTmRMRGNjGxESHUhV/HO2cq0qkm0r7Ozpkq1vEPenemkr3qw0yEze3ovm6Kv5RDa1pIPFNxzLV9LeHoXKe3gfgVucagwgIiNSVpf+i1hMZEtwV9toxfS2gjTtIk0iLSJtJRknaEHYaBcR2GRnSkq5IgPSJ9IgMiQyIjImMiEyJTIjMicyLiMJuYOIxQOUF+kScOM88DMk+RTnWvTuIwq4O68k+uDksP256mZL/5MIdhgzpymJk6Sjm0poXEDuOYa/tawtG5NtNdVWNQYQGRmpK0P+ww9Md1GBpxkqZKgrSItIl0lKQdYYfhXK7D0IjTdlUSpEekT2RAZEhkRGRMZEJkSmRGZE5EHGYTE4cRKifIL/KdDiMdFI2vs9NhsY5/0LsOk83mwxyG3enIYWbuKeXQmhYSO4xjrumVhROT3iOSOQwxqLBAzw5SU5L2hx0GHddhaIRkUyVBWkTaRDpK0o6ww3Au12FoxGm7KgnSI9InMiAyJDIiMiYyITIlMiMyJyIOs4mJwwiVE+QX+U6HkU51r85Oh8U6/snfdZhsQx/mMOxbRw4zK7dSDq1pIbHDOOaa3mc4MeaxrqrnQoUFRGpK0v7w+wycK8rIrhLRiJM0VRKkRaRNpKNkoyNm8G41xnWY7UhXw9GRnpL0JJlzs5Dva5BzloE2QnNIZERkTGRCZEpkRmRORPxn0xb/ESonyLdA4j8z2rKGJB2UlK+T+M/qoOr8g9R/6WHba0jZdz7Mf9jxjqrVrP1KObSmFcD+45jMuVmMVhyhzLmZT6sahGoJiNSI1Ik0iDSJtIi0iXSUbGRv7iy3GhOOH21uaSsy6hLpEekTGRAZEhkRGROZEJkSmRGZExEf4aIjMfERoXKC/FJOfGTHTIxEQqgMXygxEgmhevyjEielhbrtI9mnPsxH2NiOfGSej0o5tG5UkokpOzGZ89Tm0TKw4gYZ11Y1CBcnIFIjUifSINIk0iLSJtJRspE9+Qgj5PsIrcioq5ogPSJ9IgMiQyIjImMiEyJTIjMicyLiI5uY+IgQSsMv5N0+IiFUhi+020exkH/UOz6S/eXDfISd7chH5kmplEPrRiWRjzgmc26CKo5Q5tycrapBqLGASI1InUiDSJNIi0ibSEdJmj0/ViH7cPxM1ncqgIS6RHpK0pM4i749Zxk4CvRLlBoTdtPcv0baiG6OiUyITInMiMyJiAORCk4mDiRUTpBvgcSBJyYPmclICDXlCyUOJCHUnX9U4sCT89O0A1uTWV52ug8yYXiAflLDfsFVSVvTCqFFoROTOTfvNCpukJkYqhqE6xMQqRGpE2kQaRJpEWkT6SjZyN70+VZj3MlMW5FRl0iPSJ/IgMiQyIjImMiEyJTIjMiciHwZMcoGicl3CRMqJ8iv5Z2TGQuhMnyhnZPZ3tPvn8zCb2c9zEfY/o4mM1MlpejLXsNvMNmoJHPHjr8Qdjsmc27eXFQcoYxdDcdfwxwq4eLEX6W8SWoqhJg6kQaRJpEWkTaRjpI0e5rMNMabzLQRne0S6RHpExkQGRIZERkTmRCZEpkRmRMRG6FqkJjYiBAqw6/+xEammuTrt0kHdeHrJC6yOigd/6DEROen6WHxdHT29n25XFcW68Xnj0/L12/L8vLx8e3ofvXjef3pWP5j+g0cf4N4NSNfihzpaXzSkL2pR0ka3sjetD3eyd50Pd7L3sjHMkNPGKGinDnn8FLmpuTxcuam7PFK5qbi8WJZzuweIf9N140sHZxzF8PhqLotgbQEUcuZJvL2+ePL4tuys3j99vD8dvS4/CqjLB+Klm9nf/gW3sein9erl+gneev722q9Xj3hX9+Xiy/L1/Bfsjn6dbVa4x8yWKHuYLn+8XL0snhZvg4e/reMblKr14fl83qxflg9fzp+Wb2uXxcP6zCTWCyIVOSfZz9Xr79H1fD5/wFQSwMEFAAAAAgAh07iQOR89qS6AQAAaQMAABgAAAB4bC93b3Jrc2hlZXRzL3NoZWV0Mi54bWyNk8tu2zAQRfcF+g8E9xHlpmnqQFJQ2DDaRYGg6WNNSyOJMMlhyVGU9OtLUZHjwl1kpXmIB/cOh8Xto9HsAXxQaEu+ynLOwNbYKNuV/Mf33cVHzgJJ20iNFkr+BIHfVm/fFCP6Q+gBiEWCDSXvidyNEKHuwciQoQMbOy16IymmvhPBeZBNOmS0eJfnH4SRyvKZcONfw8C2VTVssR4MWJohHrSkqD/0yoWF9ti8itd4OUavi54Tidu5c+St3p/pM6r2GLClrEYjZmnnLtdi/Y9PU5+B/jMsI/1hcBcR7KK5vdKKnpLdRRDQC2ccx2x0Iavts4qTAa2uBdBmCIRmK0nyqkg3cOdFVTQqTnG6euahLfmnFY/F1P6pYAwnMZvue494mBpfmpLnEwg01NPkmYyfB9iA1onCwu8ToDgSq+IlXui7tCF3njXQykHTBvUv1VBf8jVfat9w/Ayq6ymu6GV2dVQ5GYqKnezgq/SdsoFpaONfeXbNmZ9PpJjQpeoVZ3ukOIsl6+NKQlyVPLvkrEWkJXnm3gMNjjnpwN+rP/EFRFXoVVy+tHMld+jJS0WTqBm2S5SYiuMjqf4CUEsDBBQAAAAIAIdO4kDkfPakugEAAGkDAAAYAAAAeGwvd29ya3NoZWV0cy9zaGVldDMueG1sjZPLbtswEEX3BfoPBPcR5aZp6kBSUNgw2kWBoOljTUsjiTDJYclRlPTrS1GR48JdZKV5iAf3DofF7aPR7AF8UGhLvspyzsDW2CjblfzH993FR84CSdtIjRZK/gSB31Zv3xQj+kPoAYhFgg0l74ncjRCh7sHIkKEDGzsteiMppr4TwXmQTTpktHiX5x+EkcrymXDjX8PAtlU1bLEeDFiaIR60pKg/9MqFhfbYvIrXeDlGr4ueE4nbuXPkrd6f6TOq9hiwpaxGI2Zp5y7XYv2PT1Ofgf4zLCP9YXAXEeyiub3Sip6S3UUQ0AtnHMdsdCGr7bOKkwGtrgXQZgiEZitJ8qpIN3DnRVU0Kk5xunrmoS35pxWPxdT+qWAMJzGb7nuPeJgaX5qS5xMINNTT5JmMnwfYgNaJwsLvE6A4EqviJV7ou7Qhd5410MpB0wb1L9VQX/I1X2rfcPwMquspruhldnVUORmKip3s4Kv0nbKBaWjjX3l2zZmfT6SY0KXqFWd7pDiLJevjSkJclTy75KxFpCV55t4DDY456cDfqz/xBURV6FVcvrRzJXfoyUtFk6gZtkuUmIrjI6n+AlBLAwQKAAAAAACHTuJAAAAAAAAAAAAAAAAACQAAAHhsL3RoZW1lL1BLAwQUAAAACACHTuJA+P4cEI0GAACYGwAAEwAAAHhsL3RoZW1lL3RoZW1lMS54bWztWd9vGzUcf0fif7DufWvSJl1TLZ2aNFlh61Y12dAenYtz58V3PtlOu7xN2+MkJMRAe0FCvPCAgEmbBBLjn6FjaAxp/wJf23eXc3Oh7VaBgEVVc2d//P39/fpr5+KlOxFD+0RIyuOmVz1f8RCJfT6kcdD0bvS759Y8JBWOh5jxmDS9KZHepY3337uI11VIIoJgfSzXcdMLlUrWl5akD8NYnucJiWFuxEWEFbyKYGko8AHQjdjScqWyuhRhGnsoxhGQvT4aUZ+g5z/+9PKrR7/cfQB/3kbGo8OAUaykHvCZ6GkOxFlosMNxVSPkVLaZQPuYNT1gN+QHfXJHeYhhqWCi6VXMx1vauLiE19NFTC1YW1jXNZ90XbpgOF42PEUwyJlWu7XGha2cvgEwNY/rdDrtTjWnZwDY90FTK0uRZq27Vm1lNAsg+zhPu12pV2ouvkB/ZU7mRqvVqjdSWSxRA7KPtTn8WmW1trns4A3I4utz+Fprs91edfAGZPGrc/juhcZqzcUbUMhoPJ5Da4d2uyn1HDLibLsUvgbwtUoKn6EgGvLo0ixGPFaLYi3Ct7noAkADGVY0RmqakBH2IZjbOBoIijUDvE5wYcYO+XJuSPNC0hc0UU3vwwRDYszovX727etnT9DrZ48P7z09vPfD4f37h/e+t7Schds4DooLX339yR9f3EW/P/ny1cPPyvGyiP/1uwfPf/60HAgZNJPoxeePf3v6+MWjj19+87AEvinwoAjv04hIdI0coD0egW7GMK7kZCBOt6IfYuqswCHQLiHdUaEDvDbFrAzXIq7xbgooHmXAy5Pbjqy9UEwULeF8JYwc4A7nrMVFqQGuaF4FC/cncVDOXEyKuD2M98t4t3HsuLYzSaBqZkHp2L4dEkfMXYZjhQMSE4X0HB8TUqLdLUodu+5QX3DJRwrdoqiFaalJ+nTgBNJs0TaNwC/TMp3B1Y5tdm6iFmdlWm+RfRcJCYFZifB9whwzXsYThaMykn0csaLBr2IVlgnZmwq/iOtIBZ4OCOOoMyRSlq25LkDfgtOvYKhXpW7fYdPIRQpFx2U0r2LOi8gtPm6HOErKsD0ah0XsB3IMIYrRLldl8B3uZoh+Bz/geKG7b1LiuPv4QnCDBo5IswDRMxNR4svLhDvx25uyESamykBJdyp1ROO/KtuMQt22HN6V7aa3CZtYWfJsHynWi3D/whK9hSfxLoGsmN+i3lXodxXa+89X6EW5fPZ1eVaKoUrrhsT22qbzjhY23iPKWE9NGbkqTe8tYQMadmFQrzNnT5IfxJIQHnUmAwMHFwhs1iDB1UdUhb0QJ9C3Vz1NJJAp6UCihEs4L5rhUtoaD72/sqfNuj6H2MohsdrhQzu8ooez40ZOxkgVmDNtxmhFEzgps5ULKVHQ7U2YVbVQJ+ZWNaKZouhwy1XWJjbncjB5rhoM5taEzgZBPwRWXoXTv2YN5x3MyFDb3fooc4vxwlm6SIZ4SFIfab3nfVQ1TspiZU4RrYcNBn12PMZqBW4NTfYtuJ3ESUV2tQXsMu+9jZeyCJ55CagdTUcWF5OTxeig6TXqy3UP+ThpeiM4KsNjlIDXpW4mMQvg2slXwob9sclssnzmzUammJsEVbj9sHafU9ipA4mQagvL0IaGmUpDgMWak5V/uQ5mPSsFSqrRyaRYWYNg+MekADu6riWjEfFV0dmFEW07+5qWUj5RRPTC4QEasInYw+B+Haqgz5BKuPEwFUG/wPWctraZcotzmnTFSzGDs+OYJSFOy61O0SyTLdwUpFwG81YQD3Qrld0od3pVTMqfkSrFMP6fqaL3E7iCWBlqD/hwSSww0pnS9LhQIYcqlITU7wpoHEztgGiBK16YhqCCq2rzLci+/rY5Z2mYtIaTpNqjARIU9iMVCkJ2oSyZ6DuGWDXduyxJlhIyEVUQVyZW7AHZJ6yva+Cq3ts9FEKom2qSlgGDOxp/7nuaQYNANznFfHMqWb732hz4uzsfm8yglFuHTUOT2T8XMW8PZruqXW+WZ3tvURE9MWuzallWALPCVtBI0/4NRTjlVmsr1pzGy/VMOPDivMYwmDdECVwkIf0P9j8qfEZMGOsNtc/3oLYi+P1CE4Owgag+ZxsPpAukHRxA42QHbTBpUta0aeukrZZt1mfc6eZ8jxhbS3YSf5/S2Hlz5rJzcvEsjZ1a2LG1HVtoavDs0RSFoVF2kDGOMT+YFX/M4oPb4Ogt+NlgwpS0tA1o409QSwMEFAAAAAgAh07iQMQiUyHRCgAAC04AAA0AAAB4bC9zdHlsZXMueG1s1Vz/b9vGFf99wP4HgsH2QzBbEkV9YWo5i2UTKNACA5IBA7YhkCXKJiCJHkVldocBadPUXYcMGNItW1FgXYss+2Hxtm7Ygq5J/5lIsX/qv7B3R/LunXQUaeso1RZgURTft8979+7x3VEb1w/7Pe2O4w9db9DQS+tFXXMGba/jDvYa+g9v2Wt1XRsGrUGn1fMGTkM/cob69c1vf2tjGBz1nJv7jhNowGIwbOj7QXBwrVAYtvedfmu47h04A/im6/n9VgAf/b3C8MB3Wp0hIer3CkaxWC30W+5A39wYjPp2PxhqbW80CBq6yU5p4Tevd+CkqWsht6bXAVVua9/92cgLXvv6q8fhwVXtyveuXCmuF4u3tdck3/5kbf73IZe18O36dcrk+7c1vRDrh5UpTyszJf2qNiXuaqRuRv7GNH+5sXMtlX8pmDnfyNK0EpGRlIpZGH1K5FuIvLu50fUG3MkG8TI5s7kxfEu70+pB/JUI2G2v5/laAGEEXqZnBq2+E14xPvn1y+cP6VX7LX8I0RcSlk1yjsZedGXfHXg+OVkIZYT/d8lVK5SmzhKZFf7ebkO37SL9I7ZnFZcJIzXcZXqfy9fFbJ6eI4dySIUmo5ykiIrQsulfJl9kFDhKCOFIYB2cX1dqoQzJSJjVBGlVldYlwbmsEGFBXi0VlaKYZFgksGyTl0okU+KE5AhbqcAUC+0bte0cIa0Q7ISpo5wJzVLWqWPOMCCuqykdBnOEWc1qRS2O7vyMUrPJKxOYGVNYUqREg3x5jss5JqkhK4rJsAzIzWt1wjkf02gxMoTa0O312C1BuUqqRTizuXHQCgLHH9jwQYuObx0dQK04gFsUolYhvC7l6j2/dVQyaNrIRjD0em6HaLHXpBVqlLm3rR3Dpp7ejb5wBx3n0IFbliqtSgtI4azKJciCcWjZW8TGJciybaPZzFlWNOJruha45M6vuF6zLKteqtbrdcsslyiAOdoayV+SGLiZXqmZdNDmjyYdUzmKiQbejQp55RygkSzbbtaaOznLYoMh3/EdianwYCzDmKtVKvVKyTLMkrUcM6tcfgXkW+W6VTVg6BeX5NJmdcfO3aVx+Bg2vJaO64pyKUtyy42rGGu4417WvIVieEW2NpvWksYrmryWa2uUr+j9VY6zCisFWPiuJC3Z9s6WtaSyy1pVCp6dglaSqpD9KwlpNAUvN9ZmY30l+KOyfyX4I/+v2v6V+B+l9JXIP/fMRW/UoTWw6/kdWLSM1wtLpDkQntvc6DndAApo393bJ++Bd0DKaS8IvD4cdNzWnjdo9eCwEFPE74QSVjthYbOhB/t0YTLscLRGgRctRRXIRRH31GupDlSF1EtBzVjL1GtDY9JtARsRCqls81AhVejF4MzLo8AXUEhV+jIilWrUeaMqleGljX6IgqxpouONdnsOZJ8wUUS3IHwxR5YuUmlmgUslkURkKs15HT5ncLB6Aq4ppOsiXJ5VDWm8ZQJcyOWzFLNwpxBIDEyhUGEjX4aRBZVMAUSRzUZEkNFGRJHVRggRqk0YTvA/JIzd23c67qjPRpTyUNkyyIu0YrLCiCiywYgIMsKIKBTBKB/9tg3bA+iWGih+SEWUnuku6C52E22Sfr5ZM4s1s2JUQ+DnyY6qMijy2k6vd5NUYz/qskrPtCAyDrtoJxbsWCNbe8gOMXIIi0LRYVjVhR82N1o9d2/QdwawYcjxA7dNthu14aPj01A47E6xNekGLPV8kbpw9xerW4I7ocX0RXyhGmaMDdjCxRnD/qoLIEH33alHwqS7y9TzRUhghMEKDkTxAjggvnDfyDwnAHwRvibdSpgrDjggwAxlOJSI6qpGHAE1h4GM3Aa3u8q0RWzJYQQCrJ0gdAGe8w83xBi5jSCtzm0ofkGcMr4GyZmqwgHhYKgMM8S3lFNAlFDeEfAtGYsFBMnmUoAXZYwjDUBRFhFkPMgVriyGBFK4vHAGxiGBQpjMoxyJ0kVyO+ZMptE4TYicLzIrI85QOzDGQrjVF8MYRXEZYOFQLIgE8p2QLhdkaxBIZNkHNpEslIbB83LGpBY9b12J/AbVGONLUoYygEk1GSMBG5zUMUYRobJgRQEhDIwFAwJpWxbGhTq+8AxDLugaKuFFOBgqBxxyG5mhlYUv4gvzmjq+CAc4VKYuYlvOCQaVUzJWV2X0Iq+ROlAZvIhvOSe3GSAjD32Ni/itgNseYRME9T/oStf5+x/aYTfqirQODnpHN+JmCFnUWmgOS5oa4fwckdBTSrIBzYlCFMF5kaEN94pEfY1aZMPEzz9t0eVB/jnR3n3Pd98CRqgbNNsf0n7utw5uOYdUHOkbzjSL0KSeBAgYI+o/V8c5ACUJgNSjRgBoyooHPC4gWYgCLpkHIHmI+l/UA0kAXZYQTbqbTtF/Llw4iagfVEhjYYZN0fgbnxRg3rmMITnTQT9XhkwaPjMZUkl+yUdXKM9FxynRVf3ASZosZvSfO7jnzEaoqSEUk9+0kUmrKqij0KqSuKbEqi6NPBjc0MfPnp0+eRe5eXfk9uDhjbCMAkSmCU7//WT87O0fF38a0wAEiKZGlpmmaYzid7Q1bfzlF6f/uDf5/fH46aOzTz8+/dXnGpvMYVAgJuXwqat4XSxS9fTFw/H9x7FYkiC5qtAUkcgNdY0piOM4BX0UZlrR8YN7L58/GL//3tlHHyITST3OKekG3WlKM9VEUnxzJmW6J2yay/i/J7G25M6YXw43yhL7sLoxHanFOV34ZN4UkNVUXcntM2diysH9z/2zhy8mv2EeIf0jRCX14as/vgB0J3//MFaXNIcQEX0mYhaVz09Pvjp7dPLqo3dPZ6SKoSOFdfKvv54df8BEiqEDakugTcSIpW9ot2HN4cE9CZvJJ8dnn/5Bg0vDPEr7XxzZ8BmUaXtPn/5l/NsPYKBMPv4bIxTDJ/oFiSnHhtIYiRhCIFqi4OmTzwCayd0nU+LEMKpI4ygyjuVAuiqEjJuHCIORtDNRAEBPT6JlojeYbLoAzGVDI1fCJlKYZx0xdmCdREKUKJs5lXaFuGz4ARcJG5K9jr+IfUMbapwEtJeRnPz51ckjRiJmIWg+SEgmn92d/Onx+MHvxvfvTT75ktGK0QMKS2gTszQr32i7jmtdkY4cSZrnzhbDCvpIEj3CrDJrg5iUAEEJ7eSfx5O7/4vNpu1Qrm/4EOz0aBs/fs6uF5MR9EskIs7uvvPy2VNGIoYQtEIkJInIgkvDvEA7alxTUypZgiyLf3i6Hw8jaICeRw/ORgwyAFDCJnGu42zEeIOlKwmbRFRYuJTFDBb+gsG0/xK14Wymok6aCCXgsjwBkzUGF9SSmCNhwDIEzKCYAWwJkTBIxIOzEeMT9u5I2CTiwdmIMQsbMyRsJOawaCVbOVDONqWAJurB2Ygxa0phTUy/nI0Ys6Z0CErMYWkNRptgjnTsJJrD2YjRWpE6OdEczkaM1gp1Mu+WQmkftGAvLt0xxmp7iK+O022NesEt9mVD58dv0t2G4Pfoqh+4d7yAsmjo/PgN8iwBtF4hHKAN+MYQHgCAd23kuw39FztbNWt7xzbW6sWt+ppZdiprVmVre61iNre2t22raBSbv4R8Rn4l7dphyZz5pbS+2/a9odcN1tvwiILX7bptZ/a30qyCFf9aGjC5NuzBVX5kbKT8TX6uoaMPofpE+wKoHf6nRhSG7FfcNv8PUEsDBBQAAAAIAIdO4kAAebfdBAUAAJEOAAAUAAAAeGwvc2hhcmVkU3RyaW5ncy54bWytV91SIkcUvk9V3oEiVblJ7cIgmk2i7EWq8gTJA1hKVqsUjWAquRtBEFB+FFRUUNBFWFl+VlGRH32XzZzTM1e+Qs44q1jdDLsXW0VNDf311+f0Od853TP++p/5Ocvf7iXv7IJnwiq9tFstbs/UwvSs582E9Y/ff3vxymrx+iY905NzCx73hPVft9f62vXtN+Ner89CXI93wjrj8y3+bLN5p2bc85PelwuLbg8hfy4szU/66O/SG5t3cck9Oe2dcbt983M2h90+ZpufnPVYLVMLyx7fhNUhOa2WZc/sX8vuX40RSZKsrnHvrGvc54J2AhLX4zafa9ymjxijLFFl7RI/CqUUJGPCaPV0wAoQzcNaAsIhDAQhdMmT1PqqWqsRzAMo5zBwgek7PO+wZl5tllHu0Lzvv5Psv9x3w0/EH3QL4dALw8p9dwM7Bfov2e30vO9GvmDhrMw6YbjdJQI/+5OZBxNkFRJ11qyTRdOFtZUU3F4bPhFBacUgucE+kOuVZ+QNGlRa8uP4DmZlrZIZ7LBaoKlttbSqbgS+5roYORmwYd3CQ74gGVZrBT4eGJHV+LUaO1HPIqzUGJTwcAjkLs+D4D5sZmBrA4JFemelOh6ukHmoJo0Q8wSlvc7SHx6zjfnCf/KKtndMT9KkWihDr2EoakAmPspZLbcFN014W4LqqXKT/yjnjJfBKjQw8o6lj7DZIQIG6rhzo+WOWTUyoAJYb5N1sqRLCHae5SSq7SWlT7ozNsBvC2p3ajgGsQpZ4jHczeN2UFdMwk+LPu2ZPIJomZ9N83BnDTNxCgm9G7oztMJPVev7yl2BldehfQrXNQG+y0EiRuZIY/Rk7TN+hsPuGKUo4OU1NtcxKmO2LlEa+GlquqC0ehCL84Bj1E79yEk1KfHQ84BAsKwFyko3w0oy1Q4rrUP1hLaHmSK9UJIwezQg3XhwA6lzfuG+TQcPQfwIwgcUPVbJq8cVWpjMQi0DZ1skHQoVrtQNAem6Cb5XurskdExfQW9bYvU1fj1tL6xeBVmxzQN9H5w8ZFYHrJPCw6waqUOxx3PIDvUQ+vFA384oDxGHbR7yo33CjzxEBNxL4cEpD/Q5r3hI52RkLSB4/MSR7DxnSOI/k2+WXYdEQy/PzBGLNyDbZv4bOpAwewbhBm9HD1rqXGud8EDfN0GUVCpqIIs5YbE+RxSVSWMzEmqImncBmmmlHUe/eaylEYET28ZqCGL7PND3TRCb0lrRUnE1LBb2Y2FKgnCIo7R2hsZgjHcBa5cstMdWr3ig75ugN+LgRQ8zUXOOoDcsRz8Xt5/45aizGUmAg2M6iniYjl/Nn9I2Kzzw5LpDkInOOT5mm1lzjiAT/ZivJjHjN+cI6dNu9+FwH4JNc46QPmpnehn78+YcIX1D+uIXdEHjdDA3J2ReO3qnHZTVW/MqcwiZ1wI5pXfBOsIh1k+TkHmltw2ZCMrCZeaJMyKkVufUdvFCuD72OUJq1UCB9IPBkmkMRoRqZqunJAdYKZpzhDSplztq9ILdvjXnCLGGYENNxoadBCNCrDEXh9oBhRsvUqamnELoiEY3d3OCEDciaKflYV3QKcTt+emB4STrvFNaEXxfgERU6RSVVvThGhXFvHAT1a2R6ob0QqdQgKwToNs6rJkryCkUIB7uKre5Yb3QKSgVi11oh+jbwDR6Y3Yegm4eGy3lTuyfTuPSRV95fY6NPild/wNQSwMEFAAAAAgAh07iQMsVdTNAAQAAOQIAAA8AAAB4bC93b3JrYm9vay54bWyNkV9LwzAUxd8Fv0PIu0vbrUPH2oGouBcZ6OZzbG7XsDQpSWbnt/cmxW6wF59y/xx+nHuyXJ1aRb7BOml0QdNJQgnoygip9wXdfrzc3VPiPNeCK6OhoD/g6Kq8vVn2xh6+jDkQBGhX0Mb7bsGYqxpouZuYDjRuamNb7rG1e+Y6C1y4BsC3imVJMmctl5oOhIX9D8PUtazgyVTHFrQfIBYU92jfNbJztFzWUsFuuIjwrnvjLfo+KUoUd/5ZSA+ioFNsTQ/nQU6JPXaPR6lw+zBNMsrK8ciNxSZcu5PQu/M8tKSXWpj+UwrfFDRL5wlmOMxeQe4bj7Em+TwJPHbBiEEgK75ER5fvIZwUEw/vGo1gbRcSC7sWaSBcqbMLNdajOvq/UuPZIxvrUT2N7uIKLVVcVRtLwhNNzGZ5lkfF36+Xv1BLAwQKAAAAAACHTuJAAAAAAAAAAAAAAAAABgAAAF9yZWxzL1BLAwQUAAAACACHTuJAezh2vP8AAADfAgAACwAAAF9yZWxzLy5yZWxzrZLPSsQwEMbvgu8Q5r5NdxUR2XQvIuxNZH2AmEz/0CYTklntvr1BUSzUugePmfnmm998ZLsb3SBeMaaOvIJ1UYJAb8h2vlHwfHhY3YJIrL3VA3lUcMIEu+ryYvuEg+Y8lNouJJFdfFLQMoc7KZNp0elUUECfOzVFpzk/YyODNr1uUG7K8kbGnx5QTTzF3iqIe7sGcTiFvPlvb6rrzuA9maNDzzMr5FSRnXVskBWMg3yj2L8Q9UUGBjnPcnU+y+93SoesrWYtDUVchZhTitzlXL9xLJnHXE4fiiWgzflA09PnwsGR0Vu0y0g6hCWi6/8kMsfE5JZ5PjVfSHLyLat3UEsDBAoAAAAAAIdO4kAAAAAAAAAAAAAAAAAJAAAAeGwvX3JlbHMvUEsDBBQAAAAIAIdO4kAg+O4Z+wAAANQDAAAaAAAAeGwvX3JlbHMvd29ya2Jvb2sueG1sLnJlbHO9k8tqwzAQRfeF/oOYfS3baUMJkbMphWzb9AOEPX4QWzKa6cN/38GLuIbgbkw2gplB957RRfvDT9eqLwzUeGcgiWJQ6HJfNK4y8HF6fXgGRWxdYVvv0MCABIfs/m7/hq1luUR105MSFUcGauZ+pzXlNXaWIt+jk0npQ2dZylDp3uZnW6FO43irw18NyGaa6lgYCMdiC+o09OL8v7YvyybHF59/duj4ioWm2gYs3jnIeiTCNlTIBmbtSIhBX4d5WhWGh1Zec6IY6yX7xzXtWTLCyX0s9XgmSwybNRm+fThTjcgTx6VFkpZMNksw6Y1h0iWY5MYwl5j07C9mv1BLAwQUAAAACACHTuJAb3kFInMBAAAdBgAAEwAAAFtDb250ZW50X1R5cGVzXS54bWy1lMtuwjAQRfeV+g+RtxUxUKmqKgKLPpYtUukHuPaERMQPeQyFv+/EQCUQBdLQTSTHnnvuXD8Go6WukgV4LK3JWC/tsgSMtKo004x9TF469yzBIIwSlTWQsRUgGw2vrwaTlQNMqNpgxooQ3APnKAvQAlPrwNBMbr0WgYZ+yp2QMzEF3u9277i0JoAJnVBrsOHgCXIxr0LyvKTfayceKmTJ43phzcqYcK4qpQjklC+M2qN0NoSUKuMaLEqHN2SD8YOEeuZ3wKbujaLxpYJkLHx4FZpscGXl2FuHnAylx1UO2LR5XkogjbmmCFKoW1agOo4kwYcSfjwfZUvroTl8m1Fd3Zg4x2B1c+ZewzLKnAlfVhwL4UG9B08nElvT0XkQCguAoKt0R3t7VA7FXvsIqwoubiCKniAHulTA47fXOoAocwL4Zf3s09pZa9h+2pR6qkVpzuDHLULafapp3/Wukbq/KNzQR//CgfzVx+1/++DxcR9+A1BLAQIUABQAAAAIAIdO4kBveQUicwEAAB0GAAATAAAAAAAAAAEAIAAAAIo9AABbQ29udGVudF9UeXBlc10ueG1sUEsBAhQACgAAAAAAh07iQAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAQAAAA5DoAAF9yZWxzL1BLAQIUABQAAAAIAIdO4kB7OHa8/wAAAN8CAAALAAAAAAAAAAEAIAAAAAg7AABfcmVscy8ucmVsc1BLAQIUAAoAAAAAAIdO4kAAAAAAAAAAAAAAAAAJAAAAAAAAAAAAEAAAAAAAAABkb2NQcm9wcy9QSwECFAAUAAAACACHTuJA+Qt5/zsBAABvAgAAEAAAAAAAAAABACAAAAAnAAAAZG9jUHJvcHMvYXBwLnhtbFBLAQIUABQAAAAIAIdO4kDAhqc9RQEAAFcCAAARAAAAAAAAAAEAIAAAAJABAABkb2NQcm9wcy9jb3JlLnhtbFBLAQIUABQAAAAIAIdO4kBcRslK/gAAAIABAAATAAAAAAAAAAEAIAAAAAQDAABkb2NQcm9wcy9jdXN0b20ueG1sUEsBAhQACgAAAAAAh07iQAAAAAAAAAAAAAAAAAMAAAAAAAAAAAAQAAAAMwQAAHhsL1BLAQIUAAoAAAAAAIdO4kAAAAAAAAAAAAAAAAAJAAAAAAAAAAAAEAAAADA8AAB4bC9fcmVscy9QSwECFAAUAAAACACHTuJAIPjuGfsAAADUAwAAGgAAAAAAAAABACAAAABXPAAAeGwvX3JlbHMvd29ya2Jvb2sueG1sLnJlbHNQSwECFAAUAAAACACHTuJAAHm33QQFAACRDgAAFAAAAAAAAAABACAAAABBNAAAeGwvc2hhcmVkU3RyaW5ncy54bWxQSwECFAAUAAAACACHTuJAxCJTIdEKAAALTgAADQAAAAAAAAABACAAAABFKQAAeGwvc3R5bGVzLnhtbFBLAQIUAAoAAAAAAIdO4kAAAAAAAAAAAAAAAAAJAAAAAAAAAAAAEAAAAGAiAAB4bC90aGVtZS9QSwECFAAUAAAACACHTuJA+P4cEI0GAACYGwAAEwAAAAAAAAABACAAAACHIgAAeGwvdGhlbWUvdGhlbWUxLnhtbFBLAQIUABQAAAAIAIdO4kDLFXUzQAEAADkCAAAPAAAAAAAAAAEAIAAAAHc5AAB4bC93b3JrYm9vay54bWxQSwECFAAKAAAAAACHTuJAAAAAAAAAAAAAAAAADgAAAAAAAAAAABAAAABUBAAAeGwvd29ya3NoZWV0cy9QSwECFAAUAAAACACHTuJAhW9QPsoZAACLkwAAGAAAAAAAAAABACAAAACABAAAeGwvd29ya3NoZWV0cy9zaGVldDEueG1sUEsBAhQAFAAAAAgAh07iQOR89qS6AQAAaQMAABgAAAAAAAAAAQAgAAAAgB4AAHhsL3dvcmtzaGVldHMvc2hlZXQyLnhtbFBLAQIUABQAAAAIAIdO4kDkfPakugEAAGkDAAAYAAAAAAAAAAEAIAAAAHAgAAB4bC93b3Jrc2hlZXRzL3NoZWV0My54bWxQSwUGAAAAABMAEwCTBAAALj8AAAAA" download="思想政治素质加分申请汇总表.xlsx">⬇ 下载 .xlsx 附件</a>
+      </h2>
+      <div class="table-wrap"><table class="zctab">
+<thead><tr><th rowspan="3" colspan="1">序号</th><th rowspan="3" colspan="1">班级</th><th rowspan="3" colspan="1">姓名</th><th rowspan="3" colspan="1">学号</th><th rowspan="1" colspan="25">加减分情况</th><th rowspan="3" colspan="1">评议分</th><th rowspan="3" colspan="1">思想政治素质总分
+（评议分+加分-减分，满分100分）</th><th rowspan="3" colspan="1">思想政治素质最终得分</th></tr>
+<tr><th rowspan="1" colspan="4">评议加分（可累加）</th><th rowspan="1" colspan="4">思想道德加分（不同类别可累加，同一类别取最高分）</th><th rowspan="1" colspan="4">行为规范加分（不同类别可累加，同一类别取最高分）</th><th rowspan="1" colspan="12">扣分</th><th rowspan="2" colspan="1">加减分合计</th></tr>
+<tr><th>所获荣誉称号</th><th>分值</th><th>党员和入党积极分子评议</th><th>分值</th><th>事由
+（校、院、班表彰情况）</th><th>分值</th><th>“青年大学习”学习情况</th><th>分值</th><th>学习和生活习惯方面等级</th><th>分值</th><th>网络素养加分（上限10分）事由</th><th>分值</th><th>宿舍卫生</th><th>扣分</th><th>无故不参加校、院活动</th><th>扣分</th><th>不文明、不道德行为</th><th>扣分</th><th>诚信程度差</th><th>扣分</th><th>违反校规校纪</th><th>扣分</th><th>党员和入党积极分子评议</th><th>扣分</th></tr></thead>
+<tbody><tr data-sid="25020041001"><td>1</td><td>2025级海洋技术1班</td><td>蔡丽华</td><td>25020041001</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>10</td><td></td><td>10</td><td>1</td></tr>
+<tr data-sid="25020041002"><td>2</td><td>2025级海洋技术1班</td><td>曹哲</td><td>25020041002</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td>原创文章被学部官媒“信息青年”公众号收录1篇</td><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>11</td><td></td><td>11</td><td>1.1</td></tr>
+<tr data-sid="25020041004"><td>3</td><td>2025级海洋技术1班</td><td>陈超祺</td><td>25020041004</td><td></td><td></td><td>入党积极分子评议结果良好</td><td>2</td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>12</td><td></td><td>12</td><td>1.2</td></tr>
+<tr data-sid="25020041005"><td>4</td><td>2025级海洋技术1班</td><td>陈可可</td><td>25020041005</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>10</td><td></td><td>10</td><td>1</td></tr>
+<tr data-sid="25020041007"><td>5</td><td>2025级海洋技术1班</td><td>陈瑞</td><td>25020041007</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>10</td><td></td><td>10</td><td>1</td></tr>
+<tr data-sid="25020041008"><td>6</td><td>2025级海洋技术1班</td><td>陈晓曦</td><td>25020041008</td><td></td><td></td><td>入党积极分子评议结果良好</td><td>2</td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>12</td><td></td><td>12</td><td>1.2</td></tr>
+<tr data-sid="25020041010"><td>7</td><td>2025级海洋技术1班</td><td>陈昀都</td><td>25020041010</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（春季学期）</td><td>5</td><td></td><td></td><td></td><td></td><td>看台方队现场点名未到</td><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>1</td><td></td><td>1</td><td>0.1</td></tr>
+<tr data-sid="25020041011"><td>8</td><td>2025级海洋技术1班</td><td>陈哲鸣</td><td>25020041011</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>10</td><td></td><td>10</td><td>1</td></tr>
+<tr data-sid="25020041012"><td>9</td><td>2025级海洋技术1班</td><td>程胜杰</td><td>25020041012</td><td></td><td></td><td>入党积极分子评议结果优秀</td><td>3</td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>13</td><td></td><td>13</td><td>1.3</td></tr>
+<tr data-sid="25020041013"><td>10</td><td>2025级海洋技术1班</td><td>崔于悦</td><td>25020041013</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（春季学期）</td><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>5</td><td></td><td>5</td><td>0.5</td></tr>
+<tr data-sid="25020041014"><td>11</td><td>2025级海洋技术1班</td><td>单歆博</td><td>25020041014</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（春季学期）</td><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>5</td><td></td><td>5</td><td>0.5</td></tr>
+<tr data-sid="25020041015"><td>12</td><td>2025级海洋技术1班</td><td>丁铎航</td><td>25020041015</td><td></td><td></td><td>入党积极分子评议结果优秀</td><td>3</td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>13</td><td></td><td>13</td><td>1.3</td></tr>
+<tr data-sid="25020041016"><td>13</td><td>2025级海洋技术1班</td><td>丁世杰</td><td>25020041016</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>10</td><td></td><td>10</td><td>1</td></tr>
+<tr data-sid="25020041017"><td>14</td><td>2025级海洋技术1班</td><td>段熙然</td><td>25020041017</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>10</td><td></td><td>10</td><td>1</td></tr>
+<tr data-sid="25020041018"><td>15</td><td>2025级海洋技术1班</td><td>段泽昊</td><td>25020041018</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>10</td><td></td><td>10</td><td>1</td></tr>
+<tr data-sid="25020041019"><td>16</td><td>2025级海洋技术1班</td><td>樊于悦</td><td>25020041019</td><td>校优秀团员</td><td>8</td><td>入党积极分子评议结果优秀</td><td>3</td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（春季学期）</td><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>16</td><td></td><td>16</td><td>1.6</td></tr>
+<tr data-sid="25020041021"><td>17</td><td>2025级海洋技术1班</td><td>高邓鑫</td><td>25020041021</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>10</td><td></td><td>10</td><td>1</td></tr>
+<tr data-sid="25020041022"><td>18</td><td>2025级海洋技术1班</td><td>高颢瑜</td><td>25020041022</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>10</td><td></td><td>10</td><td>1</td></tr>
+<tr data-sid="25020041024"><td>19</td><td>2025级海洋技术1班</td><td>高子昂</td><td>25020041024</td><td>校优秀团员</td><td>8</td><td>入党积极分子评议结果优秀</td><td>3</td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td>看台方队现场点名未到</td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>19</td><td></td><td>19</td><td>1.9</td></tr>
+<tr data-sid="25020041025"><td>20</td><td>2025级海洋技术1班</td><td>龚垚兴</td><td>25020041025</td><td></td><td></td><td>入党积极分子评议结果优秀</td><td>3</td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>13</td><td></td><td>13</td><td>1.3</td></tr>
+<tr data-sid="25020041026"><td>21</td><td>2025级海洋技术1班</td><td>官晓悠</td><td>25020041026</td><td>校优秀团员</td><td>8</td><td>入党积极分子评议结果良好</td><td>2</td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（春季学期）</td><td>5</td><td>原创文章被学部官媒公众号收录1篇</td><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>16</td><td></td><td>16</td><td>1.6</td></tr>
+<tr data-sid="25020041027"><td>22</td><td>2025级海洋技术1班</td><td>海洋</td><td>25020041027</td><td>校优秀团员</td><td>8</td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>18</td><td></td><td>18</td><td>1.8</td></tr>
+<tr data-sid="25020041028"><td>23</td><td>2025级海洋技术1班</td><td>韩雨辰</td><td>25020041028</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>10</td><td></td><td>10</td><td>1</td></tr>
+<tr data-sid="25020041029"><td>24</td><td>2025级海洋技术1班</td><td>郝佳绮</td><td>25020041029</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>10</td><td></td><td>10</td><td>1</td></tr>
+<tr data-sid="25020041031"><td>25</td><td>2025级海洋技术1班</td><td>何嘉怡</td><td>25020041031</td><td></td><td></td><td>入党积极分子评议结果良好</td><td>2</td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（春季学期）</td><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>7</td><td></td><td>7</td><td>0.7</td></tr>
+<tr data-sid="25020041032"><td>26</td><td>2025级海洋技术1班</td><td>何宗泉</td><td>25020041032</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>10</td><td></td><td>10</td><td>1</td></tr>
+<tr data-sid="25020041033"><td>27</td><td>2025级海洋技术1班</td><td>胡鑫慧</td><td>25020041033</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（春季学期）</td><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>5</td><td></td><td>5</td><td>0.5</td></tr>
+<tr data-sid="25020041036"><td>28</td><td>2025级海洋技术1班</td><td>焦子健</td><td>25020041036</td><td></td><td></td><td>入党积极分子评议结果优秀</td><td>3</td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>13</td><td></td><td>13</td><td>1.3</td></tr>
+<tr data-sid="25020041037"><td>29</td><td>2025级海洋技术1班</td><td>赖芳群</td><td>25020041037</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（春季学期）</td><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>5</td><td></td><td>5</td><td>0.5</td></tr>
+<tr data-sid="25020041038"><td>30</td><td>2025级海洋技术1班</td><td>兰萍瑞</td><td>25020041038</td><td></td><td></td><td>入党积极分子评议结果良好</td><td>2</td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（春季学期）</td><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>7</td><td></td><td>7</td><td>0.7</td></tr>
+<tr data-sid="25020041041"><td>31</td><td>2025级海洋技术1班</td><td>李宛佳泓</td><td>25020041041</td><td></td><td></td><td>入党积极分子评议结果良好</td><td>2</td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（春季学期）</td><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>7</td><td></td><td>7</td><td>0.7</td></tr>
+<tr data-sid="25020041042"><td>32</td><td>2025级海洋技术1班</td><td>李想</td><td>25020041042</td><td></td><td></td><td>入党积极分子评议结果良好</td><td>2</td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（春季学期）</td><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>7</td><td></td><td>7</td><td>0.7</td></tr>
+<tr data-sid="25020041043"><td>33</td><td>2025级海洋技术1班</td><td>李馨悦</td><td>25020041043</td><td></td><td></td><td>入党积极分子评议结果优秀</td><td>3</td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（春季学期）</td><td>5</td><td></td><td></td><td>宿舍卫生成绩三次及以上不及格</td><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>3</td><td></td><td>3</td><td>0.3</td></tr>
+<tr data-sid="25020041044"><td>34</td><td>2025级海洋技术1班</td><td>李雨航</td><td>25020041044</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>10</td><td></td><td>10</td><td>1</td></tr>
+<tr data-sid="25020041045"><td>35</td><td>2025级海洋技术1班</td><td>练一凡</td><td>25020041045</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>10</td><td></td><td>10</td><td>1</td></tr>
+<tr data-sid="25020041049"><td>36</td><td>2025级海洋技术1班</td><td>林依然</td><td>25020041049</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（春季学期）</td><td>5</td><td></td><td></td><td>宿舍卫生成绩三次及以上不及格</td><td>5</td><td>看台方队现场点名未到</td><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>-4</td><td></td><td>-4</td><td>-0.4</td></tr>
+<tr data-sid="25020041060"><td>37</td><td>2025级海洋技术1班</td><td>楼庆同</td><td>25020041060</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（秋季、春季学期）</td><td>10</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>10</td><td></td><td>10</td><td>1</td></tr>
+<tr data-sid="24020041111"><td>38</td><td>2025级海洋技术1班</td><td>张永俊</td><td>24020041111</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>宿舍卫生全部优秀（春季学期）</td><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>5</td><td></td><td>5</td><td>0.5</td></tr></tbody>
+</table></div>
+      <div class="legend">黄色高亮为你本人所在行；横向/纵向均可滚动查看。</div>
+    </div>
+
+    <div class="table-section">
+      <h2>② 发展性素质加分申请汇总表
+        <a class="btn-dl" href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,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" download="发展性素质加分申请汇总表.xlsx">⬇ 下载 .xlsx 附件</a>
+      </h2>
+      <div class="table-wrap"><table class="zctab">
+<thead><tr><th rowspan="4" colspan="1">序号</th><th rowspan="4" colspan="1">班级</th><th rowspan="4" colspan="1">姓名</th><th rowspan="4" colspan="1">学号</th><th rowspan="1" colspan="36"></th><th rowspan="4" colspan="1">发展性素质总分
+（满分100分）</th><th rowspan="4" colspan="1">发展性素质最终得分</th></tr>
+<tr><th rowspan="1" colspan="9">身心素养方面（不同类别可累加，同一类别取最高分计）</th><th rowspan="1" colspan="2">社会工作方面（取最高分计）</th><th rowspan="1" colspan="9">实践活动方面（不同类别可累加，同一类别取最高分计）</th><th rowspan="1" colspan="15">创新创业活动方面（不同类别可累加，同一类别取最高分计）</th><th rowspan="3" colspan="1">四方面加减分合计</th></tr>
+<tr><th rowspan="1" colspan="2">体育成绩加分（以最高分计）</th><th rowspan="1" colspan="2">体育活动类加分
+（以最高分计）</th><th rowspan="1" colspan="2">辩论赛类加分
+（以最高分计）</th><th rowspan="1" colspan="2">扣分</th><th rowspan="2" colspan="1">合计</th><th rowspan="1" colspan="2">学生干部加分</th><th rowspan="1" colspan="2">社会实践类加分</th><th rowspan="1" colspan="2">志愿服务类加分（工时每10小时，加0.5分，上限5分）</th><th rowspan="1" colspan="4">文艺活动（含征文等）加分</th><th rowspan="2" colspan="1">合计</th><th rowspan="1" colspan="2">基础知识类竞赛加分</th><th rowspan="1" colspan="2">科技竞赛加分（参照具体加分细则，需填附件5）</th><th rowspan="1" colspan="2">学术专长加分（第一署名单位须是中国海洋大学）</th><th rowspan="1" colspan="2">取得专利加分
+（第一署名单位须是中国海洋大学）</th><th rowspan="1" colspan="2">大学生创新创业训练计划类加分（同一作品以最高分计，按贡献度乘权重）</th><th rowspan="1" colspan="2">创业类比赛加分（同一作品以最高分计，需填附件5）</th><th rowspan="1" colspan="2">参加科技报告、讲座等活动加分（一次0.5分，最高2分）</th><th rowspan="2" colspan="1">合计</th></tr>
+<tr><th>跑步或体弱同学步行打卡</th><th>分值</th><th>比赛成绩</th><th>分值</th><th>比赛成绩</th><th>分值</th><th>事由</th><th>分值
+（扣分）</th><th>职务</th><th>分值</th><th>等级</th><th>分值</th><th>事由</th><th>分值</th><th>比赛获奖</th><th>分值</th><th>活动参与</th><th>分值</th><th>获奖等级</th><th>分值</th><th>获奖等级</th><th>分值</th><th>成果描述</th><th>分值</th><th>成果描述</th><th>分值</th><th>成果描述</th><th>分值</th><th>获奖等级</th><th>分值</th><th>活动名称</th><th>分值</th></tr></thead>
+<tbody><tr data-sid="25020041001"><td>1</td><td>2025级海洋技术1班</td><td>蔡丽华</td><td>25020041001</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr data-sid="25020041002"><td>2</td><td>2025级海洋技术1班</td><td>曹哲</td><td>25020041002</td><td>累计跑步120公里</td><td>2</td><td>校级跳绳比赛第3名</td><td>2</td><td></td><td></td><td></td><td></td><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>代表学部参加学校文艺活动</td><td>2</td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>6</td><td>6</td><td>0.6</td></tr>
+<tr data-sid="25020041004"><td>3</td><td>2025级海洋技术1班</td><td>陈超祺</td><td>25020041004</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td>寒假返乡社会实践结项</td><td>1</td><td></td><td></td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>3</td><td>3</td><td>0.3</td></tr>
+<tr data-sid="25020041005"><td>4</td><td>2025级海洋技术1班</td><td>陈可可</td><td>25020041005</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td>累计志愿服务工时17小时</td><td>1</td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>3</td><td>3</td><td>0.3</td></tr>
+<tr data-sid="25020041007"><td>5</td><td>2025级海洋技术1班</td><td>陈瑞</td><td>25020041007</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td>累计志愿服务工时10.5小时</td><td>1</td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>3</td><td>3</td><td>0.3</td></tr>
+<tr data-sid="25020041008"><td>6</td><td>2025级海洋技术1班</td><td>陈晓曦</td><td>25020041008</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td>寒假“返家乡”社会实践结项</td><td>1</td><td>累计志愿服务工时32小时</td><td>2</td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>5</td><td>5</td><td>0.5</td></tr>
+<tr data-sid="25020041010"><td>7</td><td>2025级海洋技术1班</td><td>陈昀都</td><td>25020041010</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td>累计志愿服务工时15小时</td><td>1</td><td></td><td></td><td></td><td></td><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>1</td><td>1</td><td>0.1</td></tr>
+<tr data-sid="25020041011"><td>8</td><td>2025级海洋技术1班</td><td>陈哲鸣</td><td>25020041011</td><td>累计跑步160公里</td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td>2</td><td></td><td></td><td></td><td></td><td>累计志愿服务工时15小时</td><td>1</td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>5</td><td>5</td><td>0.5</td></tr>
+<tr data-sid="25020041012"><td>9</td><td>2025级海洋技术1班</td><td>程胜杰</td><td>25020041012</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>体育委员</td><td>5</td><td>寒假社会实践结项</td><td>1</td><td></td><td></td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>8</td><td>8</td><td>0.8</td></tr>
+<tr data-sid="25020041013"><td>10</td><td>2025级海洋技术1班</td><td>崔于悦</td><td>25020041013</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>生活委员</td><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>5</td><td>5</td><td>0.5</td></tr>
+<tr data-sid="25020041014"><td>11</td><td>2025级海洋技术1班</td><td>单歆博</td><td>25020041014</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td>参加学部心理剧大赛获特等奖（编剧）</td><td>2</td><td></td><td></td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>2</td><td>2</td><td>0.2</td></tr>
+<tr data-sid="25020041015"><td>12</td><td>2025级海洋技术1班</td><td>丁铎航</td><td>25020041015</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>2</td><td>2</td><td>0.2</td></tr>
+<tr data-sid="25020041016"><td>13</td><td>2025级海洋技术1班</td><td>丁世杰</td><td>25020041016</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>2</td><td>2</td><td>0.2</td></tr>
+<tr data-sid="25020041017"><td>14</td><td>2025级海洋技术1班</td><td>段熙然</td><td>25020041017</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td>累计志愿服务工时4小时</td><td>0.5</td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>2.5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>2.5</td><td>2.5</td><td>0.25</td></tr>
+<tr data-sid="25020041018"><td>15</td><td>2025级海洋技术1班</td><td>段泽昊</td><td>25020041018</td><td>累计跑步160公里</td><td>2</td><td>校运会跳绳团体项目二等奖</td><td>3</td><td></td><td></td><td></td><td></td><td>5</td><td></td><td></td><td></td><td></td><td>累计志愿服务工时10小时</td><td>0.5</td><td></td><td></td><td>代表学部参加学校文艺活动</td><td>2</td><td>2.5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>7.5</td><td>7.5</td><td>0.75</td></tr>
+<tr data-sid="25020041019"><td>16</td><td>2025级海洋技术1班</td><td>樊于悦</td><td>25020041019</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>心理委员</td><td>7</td><td></td><td></td><td>累计志愿服务工时47小时</td><td>2.5</td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>4.5</td><td></td><td></td><td>“挑战杯”竞赛校级第六名</td><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>1</td><td>12.5</td><td>12.5</td><td>1.25</td></tr>
+<tr data-sid="25020041021"><td>17</td><td>2025级海洋技术1班</td><td>高邓鑫</td><td>25020041021</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>2</td><td>2</td><td>0.2</td></tr>
+<tr data-sid="25020041022"><td>18</td><td>2025级海洋技术1班</td><td>高颢瑜</td><td>25020041022</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr data-sid="25020041024"><td>19</td><td>2025级海洋技术1班</td><td>高子昂</td><td>25020041024</td><td>累计跑步122公里</td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td>2</td><td>班长</td><td>10</td><td>寒假社会实践（派出所内勤实习）结项</td><td>1</td><td>累计志愿服务工时59.99小时</td><td>3</td><td>参加学部心理剧大赛获特等奖（编剧）</td><td>2</td><td></td><td></td><td>6</td><td>全国大学生英语翻译大赛省级一等奖</td><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>参加首届低空海洋遥感大会讲座</td><td>0.5</td><td>4.5</td><td>22.5</td><td>22.5</td><td>2.25</td></tr>
+<tr data-sid="25020041025"><td>20</td><td>2025级海洋技术1班</td><td>龚垚兴</td><td>25020041025</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td>累计志愿服务工时28小时</td><td>1.5</td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>3.5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>3.5</td><td>3.5</td><td>0.35</td></tr>
+<tr data-sid="25020041026"><td>21</td><td>2025级海洋技术1班</td><td>官晓悠</td><td>25020041026</td><td></td><td></td><td>校运会集体跳绳项目（主力队员）</td><td>3</td><td></td><td></td><td></td><td></td><td>3</td><td>职业发展委员</td><td>7</td><td>寒假社会调查结项</td><td>1</td><td>累计志愿服务工时29小时</td><td>1.5</td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td>代表学部参加学校文艺活动</td><td>2</td><td>6.5</td><td></td><td></td><td>美国大学生数学建模竞赛获S奖</td><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>3</td><td>19.5</td><td>19.5</td><td>1.95</td></tr>
+<tr data-sid="25020041027"><td>22</td><td>2025级海洋技术1班</td><td>海洋</td><td>25020041027</td><td>累计跑步300公里</td><td>6</td><td></td><td></td><td></td><td></td><td></td><td></td><td>6</td><td>团支书</td><td>10</td><td></td><td></td><td>累计志愿服务工时100小时以上</td><td>5</td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>7</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>参加极地方向讲座2次</td><td>1</td><td>1</td><td>24</td><td>24</td><td>2.4</td></tr>
+<tr data-sid="25020041028"><td>23</td><td>2025级海洋技术1班</td><td>韩雨辰</td><td>25020041028</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td>累计志愿服务工时5小时</td><td>0.5</td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>2.5</td><td>学校时政知识竞赛一等奖</td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>2</td><td>4.5</td><td>4.5</td><td>0.45</td></tr>
+<tr data-sid="25020041029"><td>24</td><td>2025级海洋技术1班</td><td>郝佳绮</td><td>25020041029</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td>累计志愿服务工时12小时</td><td>1</td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>3</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>3</td><td>3</td><td>0.3</td></tr>
+<tr data-sid="25020041031"><td>25</td><td>2025级海洋技术1班</td><td>何嘉怡</td><td>25020041031</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td>寒假返乡社会实践结项</td><td>1</td><td>累计志愿服务工时15小时</td><td>1</td><td></td><td></td><td></td><td></td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>2</td><td>2</td><td>0.2</td></tr>
+<tr data-sid="25020041032"><td>26</td><td>2025级海洋技术1班</td><td>何宗泉</td><td>25020041032</td><td>累计跑步120公里</td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td>2</td><td>生活委员</td><td>5</td><td></td><td></td><td></td><td></td><td>参加学部心理剧大赛获特等奖（编剧）</td><td>2</td><td></td><td></td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>9</td><td>9</td><td>0.9</td></tr>
+<tr data-sid="25020041033"><td>27</td><td>2025级海洋技术1班</td><td>胡鑫慧</td><td>25020041033</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr data-sid="25020041036"><td>28</td><td>2025级海洋技术1班</td><td>焦子健</td><td>25020041036</td><td>累计跑步120公里</td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td>2</td><td>宣传委员</td><td>5</td><td></td><td></td><td>累计志愿服务工时29.5小时</td><td>1.5</td><td>参加学部心理剧大赛获特等奖（编剧）</td><td>2</td><td></td><td></td><td>3.5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>10.5</td><td>10.5</td><td>1.05</td></tr>
+<tr data-sid="25020041037"><td>29</td><td>2025级海洋技术1班</td><td>赖芳群</td><td>25020041037</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td>累计志愿服务工时38.5小时</td><td>2</td><td>参加学部心理剧大赛获特等奖（导演）</td><td>2</td><td></td><td></td><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>4</td><td>4</td><td>0.4</td></tr>
+<tr data-sid="25020041038"><td>30</td><td>2025级海洋技术1班</td><td>兰萍瑞</td><td>25020041038</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>学习委员</td><td>5</td><td></td><td></td><td></td><td></td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td>代表学部参加学校文艺活动</td><td>2</td><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>9</td><td>9</td><td>0.9</td></tr>
+<tr data-sid="25020041041"><td>31</td><td>2025级海洋技术1班</td><td>李宛佳泓</td><td>25020041041</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td>累计志愿服务工时70小时</td><td>3.5</td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>5.5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>5.5</td><td>5.5</td><td>0.55</td></tr>
+<tr data-sid="25020041042"><td>32</td><td>2025级海洋技术1班</td><td>李想</td><td>25020041042</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td>累计志愿服务工时15小时</td><td>1</td><td></td><td></td><td></td><td></td><td>1</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>1</td><td>1</td><td>0.1</td></tr>
+<tr data-sid="25020041043"><td>33</td><td>2025级海洋技术1班</td><td>李馨悦</td><td>25020041043</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>组织委员</td><td>5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>5</td><td>5</td><td>0.5</td></tr>
+<tr data-sid="25020041044"><td>34</td><td>2025级海洋技术1班</td><td>李雨航</td><td>25020041044</td><td>累计跑步244.5公里</td><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td><td>4</td><td></td><td></td><td></td><td></td><td></td><td></td><td>参加学部心理剧大赛获特等奖</td><td>2</td><td></td><td></td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>6</td><td>6</td><td>0.6</td></tr>
+<tr data-sid="25020041045"><td>35</td><td>2025级海洋技术1班</td><td>练一凡</td><td>25020041045</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr data-sid="25020041049"><td>36</td><td>2025级海洋技术1班</td><td>林依然</td><td>25020041049</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>参加学校“海大韵·艺青春”文艺演出</td><td>2</td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>2</td><td>2</td><td>0.2</td></tr>
+<tr data-sid="25020041060"><td>37</td><td>2025级海洋技术1班</td><td>楼庆同</td><td>25020041060</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>文艺委员</td><td>5</td><td></td><td></td><td>累计志愿服务工时40小时</td><td>2</td><td></td><td></td><td></td><td></td><td>2</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>7</td><td>7</td><td>0.7</td></tr>
+<tr data-sid="24020041111"><td>38</td><td>2025级海洋技术1班</td><td>张永俊</td><td>24020041111</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td></td><td></td><td></td><td></td><td>累计志愿服务工时6小时</td><td>0.5</td><td></td><td></td><td></td><td></td><td>0.5</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>0</td><td>0.5</td><td>0.5</td><td>0.05</td></tr></tbody>
+</table></div>
+      <div class="legend">黄色高亮为你本人所在行。</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-ok" onclick="goConfirm()">✅ 确认无误</button>
+      <button class="btn btn-bad" onclick="goSubmit('dispute')">⚠️ 提出异议</button>
+      <button class="btn btn-warn" onclick="goSubmit('supplement')">📎 材料补充</button>
+    </div>
+
+    <div class="table-section" style="margin-top:26px;">
+      <h2>🗂️ 我的提交记录</h2>
+      <div id="my-history"><div class="loading">加载中…</div></div>
+    </div>
+
+    <div class="back-row"><button class="btn btn-secondary" onclick="goToLogin()">返回登录</button></div>
+  </div>
+
+  <!-- View 3: 异议/补充表单 -->
+  <div id="view-form" style="display:none;">
+    <h1 id="form-title">提交</h1>
+    <div class="current-user" id="form-user-info"></div>
+    <div class="form-group">
+      <label>文字说明</label>
+      <textarea id="form-text" placeholder="请说明异议原因或补充内容…"></textarea>
+    </div>
+    <div class="form-group">
+      <label>图片材料（可多选）</label>
+      <input type="file" id="form-files" accept="image/*" multiple onchange="handleFiles(this.files)">
+      <div class="img-preview" id="img-preview"></div>
+    </div>
+    <button class="btn btn-primary" onclick="submitSubmission()">提 交</button>
+    <p class="error-msg" id="form-error"></p>
+    <div class="back-row"><button class="btn btn-secondary" onclick="backToTables()">返回查看表格</button></div>
+  </div>
+
+  <!-- View 4: 成功 -->
+  <div id="view-success" style="display:none;">
+    <h1>✅ 提交成功</h1>
+    <p class="subtitle" id="success-text" style="font-size:16px;">已记录您的反馈。</p>
+    <button class="btn btn-primary" onclick="backToTables()">返回查看表格</button>
+    <div class="back-row"><button class="btn btn-secondary" onclick="goToLogin()">返回登录</button></div>
+  </div>
+
+  <!-- View 5: 管理员 -->
+  <div id="view-admin" style="display:none;">
+    <h1>🔧 管理员面板</h1>
+    <p class="subtitle">查看全班确认/异议/补充情况（数据实时同步到云端）</p>
+    <div id="admin-overview"></div>
+    <div id="admin-detail" style="display:none;"></div>
+    <div class="back-row">
+      <button class="btn btn-secondary" onclick="clearAll()">清空全部数据</button>
+      <button class="btn btn-secondary" onclick="goToLogin()">返回登录</button>
+    </div>
+  </div>
+</div>
+
+<!-- 图片放大 -->
+<div class="modal" id="img-modal" onclick="this.classList.remove('show')"><img id="img-modal-src" src=""></div>
+
+<script>
+const PEOPLE = [{"name": "蔡丽华", "id": "25020041001"}, {"name": "曹哲", "id": "25020041002"}, {"name": "陈超祺", "id": "25020041004"}, {"name": "陈可可", "id": "25020041005"}, {"name": "陈瑞", "id": "25020041007"}, {"name": "陈晓曦", "id": "25020041008"}, {"name": "陈昀都", "id": "25020041010"}, {"name": "陈哲鸣", "id": "25020041011"}, {"name": "程胜杰", "id": "25020041012"}, {"name": "崔于悦", "id": "25020041013"}, {"name": "单歆博", "id": "25020041014"}, {"name": "丁铎航", "id": "25020041015"}, {"name": "丁世杰", "id": "25020041016"}, {"name": "段熙然", "id": "25020041017"}, {"name": "段泽昊", "id": "25020041018"}, {"name": "樊于悦", "id": "25020041019"}, {"name": "高邓鑫", "id": "25020041021"}, {"name": "高颢瑜", "id": "25020041022"}, {"name": "高子昂", "id": "25020041024"}, {"name": "龚垚兴", "id": "25020041025"}, {"name": "官晓悠", "id": "25020041026"}, {"name": "海洋", "id": "25020041027"}, {"name": "韩雨辰", "id": "25020041028"}, {"name": "郝佳绮", "id": "25020041029"}, {"name": "何嘉怡", "id": "25020041031"}, {"name": "何宗泉", "id": "25020041032"}, {"name": "胡鑫慧", "id": "25020041033"}, {"name": "焦子健", "id": "25020041036"}, {"name": "赖芳群", "id": "25020041037"}, {"name": "兰萍瑞", "id": "25020041038"}, {"name": "李宛佳泓", "id": "25020041041"}, {"name": "李想", "id": "25020041042"}, {"name": "李馨悦", "id": "25020041043"}, {"name": "李雨航", "id": "25020041044"}, {"name": "练一凡", "id": "25020041045"}, {"name": "林依然", "id": "25020041049"}, {"name": "楼庆同", "id": "25020041060"}, {"name": "张永俊", "id": "24020041111"}];
+const ADMIN_NAME = '张思浩';
+const ADMIN_ID = '000000';
+const SUPABASE_URL = 'https://tcqwzumktgjyclnmotgb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjcXd6dW1rdGdqeWNsbm1vdGdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYzNDg1ODYsImV4cCI6MjEwMTkyNDU4Nn0.G0JcfU_W70q5HHUkYBzyKGH6i7tOFeEIYz9StZN1VoQ';
+const TABLE = 'zongce_confirm';
+
+const BADGE = {
+  confirm: '<span class="badge ok">确认无误</span>',
+  dispute: '<span class="badge bad">提出异议</span>',
+  supplement: '<span class="badge warn">材料补充</span>',
+  none: '<span class="badge none">未提交</span>'
+};
+
+let currentUser = null;
+let pendingType = null;   // 'dispute' | 'supplement'
+let pendingImages = [];
+
+// 名单下拉
+document.getElementById('people-names').innerHTML =
+  PEOPLE.map(p => '<option value="' + p.name + '">').join('');
+
+// ===== Supabase REST =====
+async function supabaseGet(path) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || res.statusText);
+  return res.json();
+}
+async function supabaseInsert(table, row) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + table, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+    },
+    body: JSON.stringify(row)
+  });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || res.statusText);
+}
+async function supabaseDelete(table, id) {
+  const res = await fetch(SUPABASE_URL + '/rest/v1/' + table + '?id=eq.' + id, {
+    method: 'DELETE',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+  });
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).message || res.statusText);
+}
+
+function parseImages(data) {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  try { const a = JSON.parse(data); return Array.isArray(a) ? a : [data]; }
+  catch (e) { return [data]; }
+}
+
+function showView(id) {
+  ['view-login','view-tables','view-form','view-success','view-admin'].forEach(v => {
+    document.getElementById(v).style.display = 'none';
+  });
+  document.getElementById(id).style.display = 'block';
+  document.getElementById('container').style.animation = 'none';
+  document.getElementById('container').offsetHeight;
+  document.getElementById('container').style.animation = 'fadeIn .3s ease';
+}
+
+function goToLogin() {
+  currentUser = null;
+  document.getElementById('login-name').value = '';
+  document.getElementById('login-id').value = '';
+  document.getElementById('login-error').textContent = '';
+  showView('view-login');
+}
+
+function toggleAdminHint() {
+  const el = document.getElementById('admin-hint');
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+
+function handleLogin() {
+  const name = document.getElementById('login-name').value.trim();
+  const id = document.getElementById('login-id').value.trim();
+  const errEl = document.getElementById('login-error');
+  if (!name || !id) { errEl.textContent = '请输入姓名和学号'; return; }
+  if (name === ADMIN_NAME && id === ADMIN_ID) {
+    errEl.textContent = '';
+    showView('view-admin');
+    renderAdmin();
+    return;
+  }
+  const p = PEOPLE.find(x => x.name === name && x.id === id);
+  if (!p) { errEl.textContent = '姓名与学号不匹配，请重新输入'; return; }
+  currentUser = p;
+  errEl.textContent = '';
+  highlightMe(p.id);
+  document.getElementById('current-user-info').innerHTML =
+    '当前学员：<b>' + p.name + '</b>（' + p.id + '）';
+  showView('view-tables');
+  loadMyHistory();
+}
+
+function highlightMe(sid) {
+  document.querySelectorAll('.zctab tr.me').forEach(tr => tr.classList.remove('me'));
+  document.querySelectorAll('.zctab tr[data-sid="' + sid + '"]').forEach(tr => tr.classList.add('me'));
+}
+
+function backToTables() {
+  showView('view-tables');
+  loadMyHistory();
+}
+
+function fmtTime(t) {
+  if (!t) return '';
+  const d = new Date(t);
+  return isNaN(d) ? '' : d.toLocaleString('zh-CN');
+}
+
+async function loadMyHistory() {
+  const el = document.getElementById('my-history');
+  if (!currentUser) return;
+  try {
+    const rows = await supabaseGet(TABLE + '?student_id=eq.' + currentUser.id + '&select=*&order=id.desc');
+    if (!rows.length) { el.innerHTML = '<div class="loading">你还没有提交记录</div>'; return; }
+    el.innerHTML = rows.map((r, i) => subCard(r, rows.length - i)).join('');
+  } catch (e) { el.innerHTML = '<div class="loading">加载失败: ' + escapeHtml(e.message) + '</div>'; }
+}
+
+function subCard(r, seq) {
+  let h = '<div class="sub-card"><div class="head">' + BADGE[r.type] +
+    '<span class="time">第 ' + seq + ' 次 · ' + fmtTime(r.created_at) + '</span></div>';
+  if (r.text_content) h += '<div class="txt">' + escapeHtml(r.text_content) + '</div>';
+  const imgs = parseImages(r.image_data);
+  if (imgs.length) {
+    h += '<div class="imgs">' + imgs.map(d => '<img src="' + d + '" onclick="zoomImg(this.src)">').join('') + '</div>';
+  }
+  return h + '</div>';
+}
+
+async function goConfirm() {
+  if (!confirm('确认你本人的综测加分数据无误？')) return;
+  try {
+    await insertSub(currentUser, 'confirm', '');
+    showSuccess('确认无误，已记录。');
+  } catch (e) { alert('提交失败: ' + e.message); }
+}
+
+function goSubmit(type) {
+  pendingType = type;
+  pendingImages = [];
+  document.getElementById('form-text').value = '';
+  document.getElementById('form-files').value = '';
+  document.getElementById('img-preview').innerHTML = '';
+  document.getElementById('form-error').textContent = '';
+  document.getElementById('form-title').textContent =
+    type === 'dispute' ? '⚠️ 提出异议' : '📎 材料补充';
+  document.getElementById('form-user-info').innerHTML =
+    '当前学员：<b>' + currentUser.name + '</b>（' + currentUser.id + '）';
+  showView('view-form');
+}
+
+function handleFiles(files) {
+  const arr = Array.from(files);
+  if (pendingImages.length + arr.length > 9) {
+    document.getElementById('form-error').textContent = '最多上传 9 张图片';
+    return;
+  }
+  document.getElementById('form-error').textContent = '';
+  arr.forEach(f => compressImage(f).then(dataUrl => {
+    if (dataUrl) {
+      pendingImages.push(dataUrl);
+      renderImages();
+    }
+  }));
+}
+
+function compressImage(file) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      const MAX = 1280;
+      let w = img.width, h = img.height;
+      if (w > h && w > MAX) { h = h * MAX / w; w = MAX; }
+      else if (h >= w && h > MAX) { w = w * MAX / h; h = MAX; }
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(w); canvas.height = Math.round(h);
+      canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+    img.src = url;
+  });
+}
+
+function renderImages() {
+  document.getElementById('img-preview').innerHTML = pendingImages.map((d, i) =>
+    '<div class="img-item"><img src="' + d + '">' +
+    '<button class="del" onclick="removeImage(' + i + ')">×</button></div>'
+  ).join('');
+}
+function removeImage(i) { pendingImages.splice(i, 1); renderImages(); }
+
+async function submitSubmission() {
+  const text = document.getElementById('form-text').value.trim();
+  if (!text && pendingImages.length === 0) {
+    document.getElementById('form-error').textContent = '请填写文字说明或上传图片';
+    return;
+  }
+  try {
+    await insertSub(currentUser, pendingType, text, pendingImages);
+    showSuccess('已提交，可反复提交以补充或更正。');
+  } catch (e) {
+    document.getElementById('form-error').textContent = '提交失败: ' + e.message;
+  }
+}
+
+async function insertSub(user, type, text, images) {
+  await supabaseInsert(TABLE, {
+    student_id: user.id,
+    student_name: user.name,
+    type: type,
+    text_content: text || null,
+    image_data: (images && images.length) ? JSON.stringify(images) : null
+  });
+}
+
+function showSuccess(msg) {
+  document.getElementById('success-text').textContent = msg;
+  showView('view-success');
+}
+
+// ===== 管理员 =====
+async function renderAdmin() {
+  const el = document.getElementById('admin-overview');
+  el.style.display = 'block';
+  document.getElementById('admin-detail').style.display = 'none';
+  el.innerHTML = '<div class="loading">加载中…</div>';
+
+  let rows;
+  try { rows = await supabaseGet(TABLE + '?select=*&order=id.desc'); }
+  catch (e) { el.innerHTML = '<div class="loading">加载失败: ' + escapeHtml(e.message) + '</div>'; return; }
+
+  const countBy = {}, latestBy = {};
+  rows.forEach(r => {
+    countBy[r.student_id] = (countBy[r.student_id] || 0) + 1;
+    if (!latestBy[r.student_id]) latestBy[r.student_id] = r;  // 已按 id desc，首个即最新
+  });
+
+  const counts = { confirm: 0, dispute: 0, supplement: 0, none: 0 };
+  let tbody = '';
+  PEOPLE.forEach(p => {
+    const latest = latestBy[p.id];
+    const st = latest ? latest.type : 'none';
+    counts[st]++;
+    const time = latest ? fmtTime(latest.created_at) : '';
+    tbody += '<tr onclick="showDetail(\'' + p.id + '\')">' +
+      '<td>' + p.name + '</td><td>' + p.id + '</td>' +
+      '<td>' + BADGE[st] + '</td><td>' + (countBy[p.id] || 0) + ' 次</td><td>' + time + '</td></tr>';
+  });
+
+  el.innerHTML =
+    '<div class="cards">' +
+      '<div class="card ok"><div class="num">' + counts.confirm + '</div><div class="lbl">确认无误</div></div>' +
+      '<div class="card bad"><div class="num">' + counts.dispute + '</div><div class="lbl">提出异议</div></div>' +
+      '<div class="card warn"><div class="num">' + counts.supplement + '</div><div class="lbl">材料补充</div></div>' +
+      '<div class="card none"><div class="num">' + counts.none + '</div><div class="lbl">未提交</div></div>' +
+    '</div>' +
+    '<div class="admin-table-wrapper"><table class="admin-table">' +
+      '<thead><tr><th>姓名</th><th>学号</th><th>最新状态</th><th>提交次数</th><th>最近提交时间</th></tr></thead>' +
+      '<tbody>' + tbody + '</tbody>' +
+    '</table></div>';
+}
+
+async function showDetail(sid) {
+  const p = PEOPLE.find(x => x.id === sid);
+  const el = document.getElementById('admin-detail');
+  el.style.display = 'block';
+  document.getElementById('admin-overview').style.display = 'none';
+  el.innerHTML = '<div class="loading">加载中…</div>';
+
+  let rows;
+  try { rows = await supabaseGet(TABLE + '?student_id=eq.' + sid + '&select=*&order=id.desc'); }
+  catch (e) { el.innerHTML = '<div class="loading">加载失败: ' + escapeHtml(e.message) + '</div>'; return; }
+
+  let html = '<div class="detail-back"><button class="btn btn-secondary" onclick="renderAdmin()">← 返回总览</button></div>';
+  html += '<h2 style="margin-bottom:14px;">' + p.name + '（' + p.id + '）的提交记录</h2>';
+  if (!rows.length) {
+    html += '<div class="loading">暂无提交</div>';
+  } else {
+    html += rows.map((r, i) => subCard(r, rows.length - i)).join('');
+  }
+  el.innerHTML = html;
+}
+
+function zoomImg(src) {
+  document.getElementById('img-modal-src').src = src;
+  document.getElementById('img-modal').classList.add('show');
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+async function clearAll() {
+  if (!confirm('确定清空全部提交数据？此操作不可恢复。')) return;
+  let rows;
+  try { rows = await supabaseGet(TABLE + '?select=id'); }
+  catch (e) { alert('加载失败: ' + e.message); return; }
+  if (!rows.length) { alert('当前没有数据'); return; }
+  try {
+    await Promise.all(rows.map(r => supabaseDelete(TABLE, r.id)));
+    alert('已清空 ' + rows.length + ' 条记录');
+    renderAdmin();
+  } catch (e) { alert('清空失败: ' + e.message); }
+}
+</script>
+</body>
+</html>
