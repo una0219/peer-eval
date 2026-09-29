@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>网络自检</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0; padding: 16px;
+    font: 16px/1.6 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f4f5f7; color: #1c1c1e; padding-bottom: 40px;
+  }
+  h1 { font-size: 19px; margin: 4px 0 14px; }
+  .card {
+    background: #fff; border-radius: 12px; padding: 14px 16px;
+    margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+  .row { border-bottom: 1px solid #eee; padding: 10px 0; }
+  .row:last-child { border-bottom: 0; }
+  .row:first-child { padding-top: 0; }
+  .t { font-weight: 600; margin-bottom: 4px; }
+  .s { font-size: 14px; word-break: break-all; }
+  .ok   { color: #0a7d32; }
+  .bad  { color: #c62828; }
+  .wait { color: #9a9a9a; }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 7px; border-radius: 5px;
+         background: #eef1f5; color: #556; margin-left: 6px; vertical-align: 1px; }
+  .mono { font-family: ui-monospace, Consolas, monospace; font-size: 13px; }
+  .note { font-size: 13px; color: #666; margin-top: 8px; }
+  button {
+    width: 100%; padding: 13px; font-size: 16px; font-weight: 600;
+    border: 0; border-radius: 10px; background: #4b5bd6; color: #fff;
+    margin-bottom: 10px;
+  }
+  #raw {
+    width: 100%; height: 190px; font: 12px/1.5 ui-monospace, Consolas, monospace;
+    border: 1px solid #ddd; border-radius: 8px; padding: 10px;
+    -webkit-user-select: text; user-select: text;
+  }
+</style>
+</head>
+<body>
+
+<h1>🔍 网络自检</h1>
+
+<div class="card" id="tests">
+  <div class="row" id="r-env"><div class="t">环境</div><div class="s wait">读取中…</div></div>
+  <div class="row" id="r-gh"><div class="t">GitHub Pages <span class="tag">对照组</span></div><div class="s wait">测试中…</div></div>
+  <div class="row" id="r-bd"><div class="t">百度 <span class="tag">对照组</span></div><div class="s wait">测试中…</div></div>
+  <div class="row" id="r-sb1"><div class="t">Supabase 域名可达性 <span class="tag">关键</span></div><div class="s wait">测试中…</div></div>
+  <div class="row" id="r-sb2"><div class="t">Supabase 接口完整请求 <span class="tag">关键</span></div><div class="s wait">测试中…</div></div>
+  <div class="row" id="r-sb3"><div class="t">Supabase 实际写入 <span class="tag">关键</span></div><div class="s wait">测试中…</div></div>
+</div>
+
+<div class="card">
+  <div class="t" style="margin-bottom:8px">自检结果（可长按全选复制）</div>
+  <textarea id="raw" readonly></textarea>
+</div>
+
+<script>
+var PROJ = 'hhhgaqzhggqivxaadrnl';
+var KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoaGdhcXpoZ2dxaXZ4YWFkcm5sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2ODMyMzEsImV4cCI6MjEwNjI1OTIzMX0.aGe6HtV4AJ6hjoy6bUXxQTT_fBEFEEUvH_eKXUC5_CQ';
+var API  = 'https://' + PROJ + '.supabase.co';
+
+var log = [];
+function say(line) { log.push(line); document.getElementById('raw').value = log.join('\n'); }
+
+function set(id, cls, text) {
+  var el = document.querySelector('#' + id + ' .s');
+  el.className = 's ' + cls;
+  el.innerHTML = text;
+}
+
+// 带超时的 fetch —— 被墙时常表现为"永远挂着"，必须自己掐断
+function tfetch(url, opt, ms) {
+  opt = opt || {};
+  if (window.AbortController) {
+    var ac = new AbortController();
+    opt.signal = ac.signal;
+    var t = setTimeout(function () { ac.abort(); }, ms || 8000);
+    return fetch(url, opt).then(
+      function (r) { clearTimeout(t); return r; },
+      function (e) { clearTimeout(t); throw e; }
+    );
+  }
+  return fetch(url, opt);
+}
+
+function why(e) {
+  if (e && e.name === 'AbortError') return '超时（8 秒无响应，典型被阻断特征）';
+  return (e && (e.name ? e.name + ': ' : '') + e.message) || String(e);
+}
+
+(async function () {
+  var ua = navigator.userAgent;
+  var wx = /MicroMessenger/i.test(ua);
+  set('r-env', 'ok', (wx ? '微信内置浏览器' : '非微信（' + (/iPhone|iPad/i.test(ua) ? 'iOS Safari' : /Android/i.test(ua) ? 'Android 浏览器' : '其它') + '）'));
+  say('时间   : ' + new Date().toString());
+  say('UA     : ' + ua);
+  say('在线   : ' + navigator.onLine);
+  say('协议   : ' + location.protocol + '  来源: ' + location.origin);
+  say('API    : ' + API);
+  say('');
+
+  // ---- 对照组 ----
+  async function probe(label, url, rowId) {
+    var t0 = Date.now();
+    try {
+      await tfetch(url, { mode: 'no-cors', cache: 'no-store' }, 8000);
+      var ms = Date.now() - t0;
+      set(rowId, 'ok', '✅ 通（' + ms + 'ms）');
+      say('[OK  ] ' + label + '  ' + ms + 'ms  ' + url);
+      return true;
+    } catch (e) {
+      var ms = Date.now() - t0;
+      set(rowId, 'bad', '❌ 不通（' + ms + 'ms）<br><span class="mono">' + why(e) + '</span>');
+      say('[FAIL] ' + label + '  ' + ms + 'ms  ' + url + '  → ' + why(e));
+      return false;
+    }
+  }
+
+  await probe('GitHub Pages 对照组', location.origin + '/peer-eval/', 'r-gh');
+  await probe('百度对照组', 'https://www.baidu.com/favicon.ico', 'r-bd');
+
+  // ---- 关键：Supabase 三层递进 ----
+  var reach = await probe('Supabase 域名（no-cors，只看网络层）', API + '/rest/v1/', 'r-sb1');
+
+  // 第二层：带着真实请求头打，读响应体 —— 这一层才会暴露 CORS / 401 / 5xx
+  var t1 = Date.now();
+  try {
+    var r = await tfetch(API + '/rest/v1/eval_responses?select=id&limit=1', {
+      headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY }
+    }, 8000);
+    var body = await r.text();
+    set('r-sb2', 'ok', '✅ HTTP ' + r.status + '（' + (Date.now() - t1) + 'ms）');
+    say('[OK  ] Supabase REST select  HTTP ' + r.status + '  ' + (Date.now() - t1) + 'ms');
+    say('       响应: ' + body.slice(0, 200));
+  } catch (e) {
+    set('r-sb2', 'bad', '❌ 失败（' + (Date.now() - t1) + 'ms）<br><span class="mono">' + why(e) + '</span>');
+    say('[FAIL] Supabase REST select  ' + (Date.now() - t1) + 'ms  → ' + why(e));
+  }
+
+  // 第三层：写一条自检数据（学号 __selftest__，不占名单，管理员页会自动过滤掉）
+  var t2 = Date.now();
+  try {
+    var r2 = await tfetch(API + '/rest/v1/eval_responses?on_conflict=student_id', {
+      method: 'POST',
+      headers: {
+        'apikey': KEY, 'Authorization': 'Bearer ' + KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
+      },
+      body: JSON.stringify({
+        student_id: '__selftest__', student_name: '自检',
+        confirm_status: 'confirm', vote_seven: [], updated_at: new Date().toISOString()
+      })
+    }, 8000);
+    set('r-sb3', 'ok', '✅ HTTP ' + r2.status + '（' + (Date.now() - t2) + 'ms）');
+    say('[OK  ] Supabase REST upsert  HTTP ' + r2.status + '  ' + (Date.now() - t2) + 'ms');
+  } catch (e) {
+    set('r-sb3', 'bad', '❌ 失败（' + (Date.now() - t2) + 'ms）<br><span class="mono">' + why(e) + '</span>');
+    say('[FAIL] Supabase REST upsert  ' + (Date.now() - t2) + 'ms  → ' + why(e));
+  }
+
+  say('');
+  say('---- 判读 ----');
+  if (reach)               say('网络层通 → 问题在 CORS / 密钥 / 表结构，不是墙');
+  else if (log.join('').indexOf('[OK  ] 百度') >= 0)
+                           say('百度通、Supabase 不通 → 该域名被网络阻断（墙/运营商/路由器规则）');
+  else                     say('对照组也不通 → 手机本身网络有问题，不一定是 Supabase');
+})();
+</script>
+</body>
+</html>
