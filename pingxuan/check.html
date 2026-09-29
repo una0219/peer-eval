@@ -51,6 +51,8 @@
   <div class="row" id="r-sb1"><div class="t">Supabase 域名可达性 <span class="tag">关键</span></div><div class="s wait">测试中…</div></div>
   <div class="row" id="r-sb2"><div class="t">Supabase 接口完整请求 <span class="tag">关键</span></div><div class="s wait">测试中…</div></div>
   <div class="row" id="r-sb3"><div class="t">Supabase 实际写入 <span class="tag">关键</span></div><div class="s wait">测试中…</div></div>
+  <div class="row" id="r-bm1"><div class="t">Bmob 域名可达性 <span class="tag">候选方案</span></div><div class="s wait">测试中…</div></div>
+  <div class="row" id="r-bm2"><div class="t">Bmob 接口 + 跨域预检 <span class="tag">候选方案</span></div><div class="s wait">测试中…</div></div>
 </div>
 
 <div class="card">
@@ -163,12 +165,49 @@ function why(e) {
     say('[FAIL] Supabase REST upsert  ' + (Date.now() - t2) + 'ms  → ' + why(e));
   }
 
+  // ---- 候选方案：Bmob ----
+  // 故意用假密钥。只要**能收到 HTTP 响应**（哪怕是 400 认证失败），就证明
+  // DNS / TCP / TLS / CORS 预检 / 接口 五关全通 —— 这正是我们要验证的。
+  await probe('Bmob 域名', 'https://api.bmobcloud.com/1/timestamp', 'r-bm1');
+
+  var t3 = Date.now();
+  try {
+    var r3 = await tfetch('https://api.bmobcloud.com/1/timestamp', {
+      headers: {
+        'X-Bmob-Application-Id': 'probe-invalid',
+        'X-Bmob-REST-API-Key': 'probe-invalid',
+        'Content-Type': 'application/json'
+      }
+    }, 8000);
+    var b3 = await r3.text();
+    var ms3 = Date.now() - t3;
+    if (r3.status === 400 || r3.status === 401 || r3.status === 403) {
+      set('r-bm2', 'ok', '✅ 通！预检+接口正常（HTTP ' + r3.status + '，密钥是假的所以被拒，符合预期）');
+      say('[OK  ] Bmob REST  HTTP ' + r3.status + '  ' + ms3 + 'ms  ← 五关全通');
+      say('       响应: ' + b3.slice(0, 200));
+    } else {
+      set('r-bm2', 'ok', '✅ HTTP ' + r3.status + '（' + ms3 + 'ms）');
+      say('[OK  ] Bmob REST  HTTP ' + r3.status + '  ' + ms3 + 'ms  ' + b3.slice(0, 200));
+    }
+  } catch (e) {
+    set('r-bm2', 'bad', '❌ 失败（' + (Date.now() - t3) + 'ms）<br><span class="mono">' + why(e) + '</span>');
+    say('[FAIL] Bmob REST  ' + (Date.now() - t3) + 'ms  → ' + why(e));
+  }
+
   say('');
   say('---- 判读 ----');
-  if (reach)               say('网络层通 → 问题在 CORS / 密钥 / 表结构，不是墙');
-  else if (log.join('').indexOf('[OK  ] 百度') >= 0)
-                           say('百度通、Supabase 不通 → 该域名被网络阻断（墙/运营商/路由器规则）');
-  else                     say('对照组也不通 → 手机本身网络有问题，不一定是 Supabase');
+  var all = log.join('\n');
+  if (all.indexOf('[OK  ] Bmob REST') >= 0) {
+    say('>>> Bmob 完全可用（DNS/TCP/TLS/跨域/接口 五关全通）。');
+    say('>>> 结论：换到 Bmob 后，本机能正常提交，方案成立。');
+  } else if (all.indexOf('[FAIL] Bmob REST') >= 0) {
+    say('>>> Bmob 也走不通，不能用。需另找方案。');
+  }
+  say('');
+  if (reach)               say('Supabase 网络层通 → 问题在 CORS / 密钥 / 表结构，不是墙');
+  else if (all.indexOf('[OK  ] 百度') >= 0)
+                           say('Supabase：百度通、它不通 → 该域名被网络阻断（墙/运营商/路由器规则）');
+  else                     say('Supabase：对照组也不通 → 手机本身网络有问题');
 })();
 </script>
 </body>
