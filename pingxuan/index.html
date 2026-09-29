@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>综合测评评选结果确认</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+  -webkit-text-size-adjust: 100%;
+}
+.container {
+  background: #fff; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  width: 100%; max-width: 760px; padding: 32px 32px 36px; animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+h1 { text-align: center; color: #333; margin-bottom: 8px; font-size: 24px; }
+h2 { color: #555; font-size: 16px; margin: 26px 0 10px; padding-bottom: 6px; border-bottom: 2px solid #eee; }
+.subtitle { text-align: center; color: #888; margin-bottom: 24px; font-size: 13px; }
+.hint { font-size: 13px; color: #888; line-height: 1.7; margin-bottom: 10px; }
+.hint b { color: #667eea; }
+
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; margin-bottom: 6px; font-weight: 600; color: #444; font-size: 14px; }
+.form-group input, .form-group textarea {
+  width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0;
+  border-radius: 8px; font-size: 16px; outline: none; transition: border-color 0.2s; background: #fff;
+  font-family: inherit;
+}
+.form-group textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+.form-group input:focus, .form-group textarea:focus { border-color: #667eea; }
+
+.btn {
+  width: 100%; padding: 14px; border: none; border-radius: 8px;
+  font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; margin-top: 20px; }
+.btn-primary:active { transform: translateY(1px); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-secondary { background: #f0f0f0; color: #555; margin-top: 10px; }
+.btn-secondary:active { background: #e4e4e4; }
+.btn-row { display: flex; gap: 10px; }
+.btn-row .btn { flex: 1; margin-top: 0; }
+
+/* 确认 / 异议 二选一 */
+.choice { background: #f5f5f5; color: #666; border: 2px solid #e8e8e8; }
+.choice.on { background: #eef0ff; color: #4a5bd4; border-color: #667eea; }
+.choice.on-dispute { background: #fdecea; color: #c0392b; border-color: #e74c3c; }
+
+.error-msg { color: #e74c3c; text-align: center; margin-top: 12px; font-size: 14px; min-height: 20px; }
+.current-user {
+  background: #f8f4ff; border-left: 4px solid #667eea;
+  padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 18px; font-size: 14px; color: #555;
+}
+.notice {
+  background: #fff8e1; border-left: 3px solid #f0b429; border-radius: 0 6px 6px 0;
+  padding: 10px 14px; margin-bottom: 16px; font-size: 13px; color: #8a6d1a; line-height: 1.6;
+}
+
+/* 名单展示 */
+.name-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.name-chip {
+  display: inline-block; padding: 6px 14px; border-radius: 18px;
+  font-size: 14px; font-weight: 500; background: #eef0ff; color: #4a5bd4;
+}
+.name-chip.gold { background: #fff4d6; color: #a67908; }
+.name-chip.self { box-shadow: 0 0 0 2px #667eea inset; }
+
+/* 8选7 */
+.vote-item {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  border: 2px solid #eee; border-radius: 10px; margin-bottom: 8px; cursor: pointer;
+  transition: all 0.15s; background: #fff;
+}
+.vote-item:active { background: #fafafa; }
+.vote-item.on { border-color: #667eea; background: #f8f9ff; }
+.vote-item input { width: 20px; height: 20px; accent-color: #667eea; flex: none; }
+.vote-item .v-name { font-size: 15px; font-weight: 600; color: #333; }
+.vote-item .v-id { font-size: 12px; color: #aaa; margin-left: auto; }
+
+/* 成功页 */
+.done-box { text-align: center; padding: 30px 10px; }
+.done-icon { font-size: 56px; line-height: 1; margin-bottom: 16px; }
+.done-title { font-size: 22px; font-weight: 700; color: #333; margin-bottom: 10px; }
+.done-desc { font-size: 14px; color: #888; line-height: 1.8; }
+
+/* 管理员 */
+.stat-row { display: flex; gap: 10px; margin-bottom: 16px; }
+.stat { flex: 1; background: #fafafa; border: 1px solid #eee; border-radius: 10px; padding: 14px 10px; text-align: center; }
+.stat .n { font-size: 24px; font-weight: 700; color: #667eea; line-height: 1.2; }
+.stat .l { font-size: 12px; color: #999; margin-top: 4px; }
+.rank-item {
+  display: flex; align-items: center; gap: 12px; padding: 11px 14px;
+  border-radius: 10px; margin-bottom: 7px; background: #fafafa; font-size: 14px;
+}
+.rank-item.win { background: #e8f5e9; }
+.rank-item.cut { background: #fdecea; }
+.rank-item .r-no { width: 26px; font-weight: 700; color: #999; flex: none; }
+.rank-item.win .r-no { color: #2e7d32; }
+.rank-item.cut .r-no { color: #c0392b; }
+.rank-item .r-name { font-weight: 600; color: #333; }
+.rank-item .r-id { font-size: 12px; color: #aaa; }
+.rank-item .r-votes { margin-left: auto; font-weight: 700; color: #667eea; flex: none; }
+.rank-item.win .r-votes { color: #2e7d32; }
+.rank-item.cut .r-votes { color: #c0392b; }
+.cut-line { text-align: center; font-size: 12px; color: #c0392b; margin: 6px 0; letter-spacing: 1px; }
+
+.detail-item { border: 1px solid #eee; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: #fafafa; }
+.detail-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.detail-name { font-weight: 700; color: #333; font-size: 15px; }
+.detail-id { font-size: 12px; color: #aaa; }
+.badge { font-size: 12px; padding: 2px 9px; border-radius: 12px; font-weight: 600; }
+.badge-ok { background: #e8f5e9; color: #2e7d32; }
+.badge-no { background: #fdecea; color: #c0392b; }
+.detail-body { font-size: 13px; color: #666; line-height: 1.7; margin-top: 8px; word-break: break-all; }
+.detail-body .k { color: #999; }
+.dispute-quote { background: #fff; border-left: 3px solid #e74c3c; padding: 8px 12px; border-radius: 0 6px 6px 0; margin-top: 6px; color: #c0392b; white-space: pre-wrap; }
+
+.loading { text-align: center; color: #999; padding: 30px; font-size: 14px; }
+.no-data { color: #ccc; font-style: italic; font-size: 14px; }
+
+#toast {
+  position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+  background: #2e7d32; color: #fff; padding: 10px 22px; border-radius: 24px;
+  font-size: 14px; display: none; z-index: 1001; box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  transition: opacity 0.3s; max-width: 86vw; text-align: center;
+}
+</style>
+</head>
+<body>
+
+<div class="container" id="container">
+
+  <!-- ========== 第一页：登录 ========== -->
+  <div id="view-login">
+    <h1>📋 综合测评评选结果确认</h1>
+    <p class="subtitle">信息学部 2025-2026 学年 · 2025级海洋技术1班</p>
+    <div class="form-group">
+      <label for="login-name">姓名</label>
+      <input type="text" id="login-name" list="name-list" placeholder="请输入姓名" autocomplete="off">
+      <datalist id="name-list"></datalist>
+    </div>
+    <div class="form-group">
+      <label for="login-id">学号</label>
+      <input type="text" id="login-id" placeholder="请输入学号" autocomplete="off" inputmode="numeric">
+    </div>
+    <button class="btn btn-primary" onclick="handleLogin()">进 入</button>
+    <p class="error-msg" id="login-error"></p>
+  </div>
+
+  <!-- ========== 第二页：结果确认 + 8选7 ========== -->
+  <div id="view-main" style="display:none;">
+    <h1>📋 综合测评评选结果确认</h1>
+    <div class="current-user" id="cur-user"></div>
+    <div class="notice" id="prev-notice" style="display:none;"></div>
+
+    <h2>🏆 综合一等奖学金（3000 元）</h2>
+    <div class="name-list" id="list-first"></div>
+
+    <h2>🏆 综合二等奖学金（2000 元）</h2>
+    <div class="name-list" id="list-second"></div>
+
+    <h2>🎖️ 优秀学生</h2>
+    <div class="name-list" id="list-honor"></div>
+
+    <h2>🎖️ 优秀学生干部</h2>
+    <div class="name-list" id="list-cadre"></div>
+
+    <h2>✅ 结果确认</h2>
+    <p class="hint">请核对以上名单中与你本人相关的内容。无异议请点「我确认」；有异议请点「我有异议」并填写具体说明，管理员会查看。</p>
+    <div class="btn-row">
+      <button class="btn choice" id="btn-c-confirm" onclick="setConfirm('confirm')">我确认</button>
+      <button class="btn choice" id="btn-c-dispute" onclick="setConfirm('dispute')">我有异议</button>
+    </div>
+    <div class="form-group" id="dispute-box" style="display:none; margin-top:14px;">
+      <label for="dispute-text">异议说明（必填）</label>
+      <textarea id="dispute-text" placeholder="请写清楚你认为有误或有疑问的地方…"></textarea>
+    </div>
+
+    <h2>🗳️ 综合三等奖学金 · 8 选 7</h2>
+    <p class="hint">
+      以下 8 位同学为综合三等奖学金候选人，名额只有 <b>7</b> 个。
+      请选出你认可的 <b>7 位</b>，最终按全班票数取前 7 名。
+      <span id="vote-count" style="color:#667eea;font-weight:600;">已选 0 / 7</span>
+    </p>
+    <div id="vote-list"></div>
+
+    <button class="btn btn-primary" id="btn-submit" onclick="handleSubmit()">提 交</button>
+    <p class="error-msg" id="submit-error"></p>
+    <button class="btn btn-secondary" onclick="goToLogin()">返回登录</button>
+  </div>
+
+  <!-- ========== 第三页：提交成功 ========== -->
+  <div id="view-done" style="display:none;">
+    <div class="done-box">
+      <div class="done-icon">✅</div>
+      <div class="done-title">提交成功</div>
+      <p class="done-desc" id="done-desc"></p>
+    </div>
+    <button class="btn btn-secondary" onclick="backToMain()">返回修改</button>
+    <button class="btn btn-secondary" onclick="goToLogin()">返回登录</button>
+  </div>
+
+  <!-- ========== 管理员 ========== -->
+  <div id="view-admin" style="display:none;">
+    <h1>🔧 管理后台</h1>
+    <p class="subtitle">综合测评评选结果确认 · 全班数据</p>
+    <div id="admin-content"><div class="loading">加载中…</div></div>
+    <button class="btn btn-secondary" onclick="exportCSV()">导出 CSV</button>
+    <button class="btn btn-secondary" onclick="renderAdmin()">刷新数据</button>
+    <button class="btn btn-secondary" onclick="goToLogin()">返回登录</button>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// Supabase
+// ============================================================
+var SUPABASE_URL = 'https://hhhgaqzhggqivxaadrnl.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhoaGdhcXpoZ2dxaXZ4YWFkcm5sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA2ODMyMzEsImV4cCI6MjEwNjI1OTIzMX0.aGe6HtV4AJ6hjoy6bUXxQTT_fBEFEEUvH_eKXUC5_CQ';
+var TABLE = 'eval_responses';
+
+function sbHeaders(extra) {
+  var h = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY };
+  if (extra) { for (var k in extra) { h[k] = extra[k]; } }
+  return h;
+}
+async function sbErr(res) {
+  var msg = res.statusText;
+  try { var j = await res.json(); if (j && j.message) msg = j.message; } catch (e) {}
+  return msg;
+}
+async function sbSelect(path) {
+  var res = await fetch(SUPABASE_URL + '/rest/v1/' + path, { headers: sbHeaders() });
+  if (!res.ok) throw new Error(await sbErr(res));
+  return res.json();
+}
+// 一人一条：靠 student_id 唯一约束 upsert，重复提交覆盖最后一次
+async function sbUpsert(row) {
+  var res = await fetch(SUPABASE_URL + '/rest/v1/' + TABLE + '?on_conflict=student_id', {
+    method: 'POST',
+    headers: sbHeaders({
+      'Content-Type': 'application/json',
+      'Prefer': 'resolution=merge-duplicates,return=minimal'
+    }),
+    body: JSON.stringify(row)
+  });
+  if (!res.ok) throw new Error(await sbErr(res));
+}
+
+// ============================================================
+// 数据
+// ============================================================
+// 全班名单（38 人）
+var ROSTER = [
+  ['蔡丽华','25020041001'], ['曹哲','25020041002'], ['陈超祺','25020041004'], ['陈可可','25020041005'],
+  ['陈瑞','25020041007'], ['陈晓曦','25020041008'], ['陈昀都','25020041010'], ['陈哲鸣','25020041011'],
+  ['程胜杰','25020041012'], ['崔于悦','25020041013'], ['单歆博','25020041014'], ['丁铎航','25020041015'],
+  ['丁世杰','25020041016'], ['段熙然','25020041017'], ['段泽昊','25020041018'], ['樊于悦','25020041019'],
+  ['高邓鑫','25020041021'], ['高颢瑜','25020041022'], ['高子昂','25020041024'], ['龚垚兴','25020041025'],
+  ['官晓悠','25020041026'], ['海洋','25020041027'], ['韩雨辰','25020041028'], ['郝佳绮','25020041029'],
+  ['何嘉怡','25020041031'], ['何宗泉','25020041032'], ['胡鑫慧','25020041033'], ['焦子健','25020041036'],
+  ['赖芳群','25020041037'], ['兰萍瑞','25020041038'], ['李宛佳泓','25020041041'], ['李想','25020041042'],
+  ['李馨悦','25020041043'], ['李雨航','25020041044'], ['练一凡','25020041045'], ['林依然','25020041049'],
+  ['楼庆同','25020041060'], ['张永俊','24020041111']
+];
+var NAME_TO_ID = {};
+ROSTER.forEach(function (r) { NAME_TO_ID[r[0]] = r[1]; });
+var ALL_NAMES = ROSTER.map(function (r) { return r[0]; });
+function nameOf(id) {
+  for (var i = 0; i < ROSTER.length; i++) { if (ROSTER[i][1] === id) return ROSTER[i][0]; }
+  return id;
+}
+
+// 评选结果（来源：附件1：2025级海洋技术1班级评选结果.xlsx）
+var AWARDS = {
+  first: [
+    ['焦子健','25020041036'], ['高子昂','25020041024']
+  ],
+  second: [
+    ['曹哲','25020041002'], ['胡鑫慧','25020041033'],
+    ['赖芳群','25020041037'], ['龚垚兴','25020041025']
+  ],
+  honor: [
+    ['李馨悦','25020041043'], ['樊于悦','25020041019'], ['龚垚兴','25020041025'],
+    ['曹哲','25020041002'], ['官晓悠','25020041026'], ['兰萍瑞','25020041038']
+  ],
+  cadre: [
+    ['高子昂','25020041024']
+  ],
+  // 三等奖学金候选人 8 人，选出 7 人
+  third: [
+    ['李馨悦','25020041043'], ['陈哲鸣','25020041011'], ['李雨航','25020041044'], ['樊于悦','25020041019'],
+    ['官晓悠','25020041026'], ['程胜杰','25020041012'], ['陈晓曦','25020041008'], ['兰萍瑞','25020041038']
+  ]
+};
+var VOTE_NEED = 7;
+
+var ADMIN_NAME = 'unauna';
+var ADMIN_ID   = '20070219gza';
+
+var currentUser = null;   // { name, id, mode }
+var confirmStatus = '';   // '' | 'confirm' | 'dispute'
+var prevRow = null;       // 已提交过的记录
+var adminRows = [];       // 管理员缓存
+
+// ============================================================
+// 工具
+// ============================================================
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function $(id) { return document.getElementById(id); }
+function showView(v) {
+  ['view-login', 'view-main', 'view-done', 'view-admin'].forEach(function (id) { $(id).style.display = 'none'; });
+  $(v).style.display = 'block';
+  $(v).scrollIntoView(true);
+  window.scrollTo(0, 0);
+}
+function toast(msg) {
+  var t = $('toast');
+  t.textContent = msg; t.style.display = 'block'; t.style.opacity = '1';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function () {
+    t.style.opacity = '0';
+    setTimeout(function () { t.style.display = 'none'; }, 300);
+  }, 2400);
+}
+function goToLogin() {
+  currentUser = null; prevRow = null; confirmStatus = '';
+  $('login-name').value = ''; $('login-id').value = '';
+  $('login-error').textContent = '';
+  showView('view-login');
+}
+
+// ============================================================
+// 第一页：登录
+// ============================================================
+(function init() {
+  var dl = $('name-list');
+  ALL_NAMES.forEach(function (n) {
+    var o = document.createElement('option'); o.value = n; dl.appendChild(o);
+  });
+  $('login-id').addEventListener('keydown', function (e) { if (e.key === 'Enter') handleLogin(); });
+})();
+
+function handleLogin() {
+  var name = $('login-name').value.trim();
+  var id = $('login-id').value.trim();
+  var err = $('login-error');
+
+  if (!name) { err.textContent = '请输入姓名'; return; }
+  if (!id) { err.textContent = '请输入学号'; return; }
+
+  if (name === ADMIN_NAME && id === ADMIN_ID) {
+    err.textContent = '';
+    currentUser = { name: name, id: id, mode: 'admin' };
+    showView('view-admin');
+    renderAdmin();
+    return;
+  }
+  if (NAME_TO_ID[name] !== undefined) {
+    if (NAME_TO_ID[name] !== id) { err.textContent = '学号与姓名不匹配'; return; }
+    currentUser = { name: name, id: id, mode: 'student' };
+    err.textContent = '';
+    goToMain();
+    return;
+  }
+  err.textContent = '姓名不在名单中';
+}
+
+// ============================================================
+// 第二页
+// ============================================================
+function chipHTML(pair, highlightId) {
+  var cls = 'name-chip';
+  if (highlightId && pair[1] === highlightId) cls += ' self';
+  return '<span class="' + cls + '">' + esc(pair[0]) + '</span>';
+}
+function renderAwardLists() {
+  var me = currentUser ? currentUser.id : '';
+  $('list-first').innerHTML  = AWARDS.first.map(function (p) { return chipHTML(p, me); }).join('');
+  $('list-second').innerHTML = AWARDS.second.map(function (p) { return chipHTML(p, me); }).join('');
+  $('list-honor').innerHTML  = AWARDS.honor.map(function (p) { return chipHTML(p, me); }).join('');
+  $('list-cadre').innerHTML  = AWARDS.cadre.map(function (p) { return chipHTML(p, me); }).join('');
+}
+function renderVoteList() {
+  $('vote-list').innerHTML = AWARDS.third.map(function (p, i) {
+    return '<label class="vote-item" id="vote-item-' + i + '">' +
+      '<input type="checkbox" value="' + esc(p[1]) + '" onclick="onVoteToggle(this)">' +
+      '<span class="v-name">' + esc(p[0]) + '</span>' +
+      '<span class="v-id">' + esc(p[1]) + '</span>' +
+      '</label>';
+  }).join('');
+}
+function onVoteToggle(cb) {
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('#vote-list input[type=checkbox]'));
+  var checked = boxes.filter(function (b) { return b.checked; });
+  if (checked.length > VOTE_NEED) {
+    cb.checked = false;
+    toast('最多只能选 ' + VOTE_NEED + ' 位');
+    checked = boxes.filter(function (b) { return b.checked; });
+  }
+  syncVoteUI(checked.length);
+}
+function syncVoteUI(n) {
+  $('vote-count').textContent = '已选 ' + n + ' / ' + VOTE_NEED;
+  var boxes = Array.prototype.slice.call(document.querySelectorAll('#vote-list input[type=checkbox]'));
+  boxes.forEach(function (b) {
+    var item = b.parentNode;
+    if (b.checked) item.className = 'vote-item on'; else item.className = 'vote-item';
+  });
+}
+function getVotes() {
+  return Array.prototype.slice.call(document.querySelectorAll('#vote-list input[type=checkbox]'))
+    .filter(function (b) { return b.checked; })
+    .map(function (b) { return b.value; });
+}
+function setConfirm(status) {
+  confirmStatus = status;
+  $('btn-c-confirm').className = 'btn choice' + (status === 'confirm' ? ' on' : '');
+  $('btn-c-dispute').className = 'btn choice' + (status === 'dispute' ? ' on-dispute' : '');
+  $('dispute-box').style.display = (status === 'dispute') ? 'block' : 'none';
+  $('submit-error').textContent = '';
+}
+
+function applyPrevRow(row) {
+  confirmStatus = '';
+  $('dispute-text').value = '';
+  setConfirm('');
+  syncVoteUI(0);
+
+  if (!row) { $('prev-notice').style.display = 'none'; return; }
+
+  $('prev-notice').style.display = 'block';
+  var when = row.updated_at || row.created_at;
+  var d = when ? new Date(when) : null;
+  $('prev-notice').innerHTML = '📌 你已于 <b>' +
+    esc(d && !isNaN(d) ? d.toLocaleString('zh-CN') : '—') +
+    '</b> 提交过，下面是你上次的选择。<b>重新提交会覆盖上一次的结果。</b>';
+
+  setConfirm(row.confirm_status === 'dispute' ? 'dispute' : 'confirm');
+  if (row.dispute_text) $('dispute-text').value = row.dispute_text;
+
+  var voted = Array.isArray(row.vote_seven) ? row.vote_seven : [];
+  Array.prototype.slice.call(document.querySelectorAll('#vote-list input[type=checkbox]'))
+    .forEach(function (b) { b.checked = voted.indexOf(b.value) !== -1; });
+  syncVoteUI(voted.length);
+}
+
+async function goToMain() {
+  showView('view-main');
+  $('cur-user').textContent = '当前登录：' + currentUser.name + '（' + currentUser.id + '）';
+  renderAwardLists();
+  renderVoteList();
+  $('submit-error').textContent = '';
+  // 拉取本人已有记录
+  try {
+    var rows = await sbSelect(TABLE + '?student_id=eq.' + encodeURIComponent(currentUser.id) + '&select=*&limit=1');
+    prevRow = rows && rows.length ? rows[0] : null;
+  } catch (e) {
+    prevRow = null;
+    toast('读取历史提交失败：' + e.message);
+  }
+  applyPrevRow(prevRow);
+}
+function backToMain() { goToMain(); }
+
+async function handleSubmit() {
+  var err = $('submit-error');
+  var btn = $('btn-submit');
+
+  if (!confirmStatus) { err.textContent = '请先选择「我确认」或「我有异议」'; return; }
+  var disputeText = $('dispute-text').value.trim();
+  if (confirmStatus === 'dispute' && !disputeText) { err.textContent = '选择「我有异议」时，必须填写异议说明'; return; }
+
+  var votes = getVotes();
+  if (votes.length !== VOTE_NEED) {
+    err.textContent = '请从 8 位候选人中选出 ' + VOTE_NEED + ' 位（当前已选 ' + votes.length + ' 位）';
+    return;
+  }
+
+  var now = new Date().toISOString();
+  var row = {
+    student_id: currentUser.id,
+    student_name: currentUser.name,
+    confirm_status: confirmStatus,
+    dispute_text: confirmStatus === 'dispute' ? disputeText : null,
+    vote_seven: votes,
+    updated_at: now
+  };
+
+  btn.disabled = true; btn.textContent = '提交中…'; err.textContent = '';
+  try {
+    await sbUpsert(row);
+    prevRow = row;
+    $('done-desc').innerHTML =
+      '你的评选结果确认已提交。<br>' +
+      '如之后需要修改，重新登录本页面提交即可，<b>以最后一次为准</b>。';
+    showView('view-done');
+  } catch (e) {
+    err.textContent = '提交失败：' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = '提 交';
+  }
+}
+
+// ============================================================
+// 管理员
+// ============================================================
+async function renderAdmin() {
+  var el = $('admin-content');
+  el.innerHTML = '<div class="loading">加载中…</div>';
+  try {
+    // 一次最多 1000 条，足够
+    adminRows = await sbSelect(TABLE + '?select=*&order=updated_at.desc&limit=1000');
+  } catch (e) {
+    el.innerHTML = '<div class="loading">加载失败：' + esc(e.message) + '</div>';
+    return;
+  }
+
+  // 只统计名单内的记录，防止库里的杂项数据污染进度和票数
+  var rosterIds = {};
+  ROSTER.forEach(function (r) { rosterIds[r[1]] = true; });
+  var submitted = {};
+  adminRows.forEach(function (r) {
+    if (rosterIds[r.student_id] && !submitted[r.student_id]) submitted[r.student_id] = r;
+  });
+  var doneIds = Object.keys(submitted);
+  var nOk = 0, nNo = 0;
+  doneIds.forEach(function (k) { if (submitted[k].confirm_status === 'dispute') nNo++; else nOk++; });
+
+  var h = '';
+
+  // 统计
+  h += '<div class="stat-row">' +
+       '<div class="stat"><div class="n">' + doneIds.length + ' / ' + ROSTER.length + '</div><div class="l">已提交</div></div>' +
+       '<div class="stat"><div class="n" style="color:#2e7d32;">' + nOk + '</div><div class="l">确认</div></div>' +
+       '<div class="stat"><div class="n" style="color:#c0392b;">' + nNo + '</div><div class="l">有异议</div></div>' +
+       '</div>';
+
+  // 未提交名单
+  var pending = ROSTER.filter(function (r) { return !submitted[r[1]]; });
+  h += '<h2>⏳ 未提交（' + pending.length + '）</h2>';
+  if (pending.length) {
+    h += '<div class="name-list">' + pending.map(function (r) {
+      return '<span class="name-chip" style="background:#fff3e0;color:#e65100;">' + esc(r[0]) + '</span>';
+    }).join('') + '</div>';
+  } else {
+    h += '<div class="no-data">全班已提交完毕</div>';
+  }
+
+  // 8选7 票数排行
+  var tally = {};
+  AWARDS.third.forEach(function (p) { tally[p[1]] = 0; });
+  doneIds.forEach(function (k) {
+    var v = submitted[k].vote_seven;
+    if (!Array.isArray(v)) return;
+    v.forEach(function (id) { if (tally[id] !== undefined) tally[id]++; });
+  });
+  var voters = doneIds.filter(function (k) { return Array.isArray(submitted[k].vote_seven) && submitted[k].vote_seven.length; }).length;
+  var ranked = AWARDS.third.slice().sort(function (a, b) {
+    if (tally[b[1]] !== tally[a[1]]) return tally[b[1]] - tally[a[1]];
+    return a[1] < b[1] ? -1 : 1;   // 并列时按学号
+  });
+
+  h += '<h2>🗳️ 三等奖学金票数（' + voters + ' 人参与投票）</h2>';
+  ranked.forEach(function (p, i) {
+    var isWin = i < VOTE_NEED;
+    if (i === VOTE_NEED) h += '<div class="cut-line">— — — 以上 7 人获得 — — —</div>';
+    h += '<div class="rank-item ' + (isWin ? 'win' : 'cut') + '">' +
+         '<span class="r-no">' + (i + 1) + '</span>' +
+         '<span class="r-name">' + esc(p[0]) + '</span>' +
+         '<span class="r-id">' + esc(p[1]) + '</span>' +
+         '<span class="r-votes">' + tally[p[1]] + ' 票</span>' +
+         '</div>';
+  });
+
+  // 异议汇总
+  var disputes = doneIds.filter(function (k) { return submitted[k].confirm_status === 'dispute'; });
+  h += '<h2>❗ 异议（' + disputes.length + '）</h2>';
+  if (disputes.length) {
+    h += disputes.map(function (k) {
+      var r = submitted[k];
+      return '<div class="detail-item">' +
+             '<div class="detail-head"><span class="detail-name">' + esc(r.student_name) + '</span>' +
+             '<span class="detail-id">' + esc(r.student_id) + '</span></div>' +
+             '<div class="dispute-quote">' + esc(r.dispute_text || '（未填写）') + '</div>' +
+             '</div>';
+    }).join('');
+  } else {
+    h += '<div class="no-data">暂无异议</div>';
+  }
+
+  // 全部明细
+  var all = ROSTER.map(function (r) {
+    return { name: r[0], id: r[1], row: submitted[r[1]] || null };
+  });
+  h += '<h2>📄 全部明细（按名单顺序）</h2>';
+  h += all.map(function (o) {
+    var r = o.row;
+    if (!r) {
+      return '<div class="detail-item"><div class="detail-head">' +
+             '<span class="detail-name">' + esc(o.name) + '</span>' +
+             '<span class="detail-id">' + esc(o.id) + '</span>' +
+             '<span class="badge" style="background:#f0f0f0;color:#999;">未提交</span></div></div>';
+    }
+    var isDispute = r.confirm_status === 'dispute';
+    var voted = Array.isArray(r.vote_seven) ? r.vote_seven.map(nameOf) : [];
+    var when = r.updated_at || r.created_at;
+    var d = when ? new Date(when) : null;
+    var s = '<div class="detail-item"><div class="detail-head">' +
+            '<span class="detail-name">' + esc(r.student_name) + '</span>' +
+            '<span class="detail-id">' + esc(r.student_id) + '</span>' +
+            '<span class="badge ' + (isDispute ? 'badge-no' : 'badge-ok') + '">' + (isDispute ? '有异议' : '已确认') + '</span>' +
+            '</div>';
+    if (isDispute) s += '<div class="dispute-quote">' + esc(r.dispute_text || '（未填写）') + '</div>';
+    s += '<div class="detail-body"><span class="k">8选7：</span>' +
+         (voted.length ? esc(voted.join('、')) + '（' + voted.length + ' 人）' : '<span class="no-data">未投票</span>') +
+         '</div>';
+    if (d && !isNaN(d)) s += '<div class="detail-body"><span class="k">提交于 </span>' + esc(d.toLocaleString('zh-CN')) + '</div>';
+    s += '</div>';
+    return s;
+  }).join('');
+
+  el.innerHTML = h;
+}
+
+function exportCSV() {
+  if (!adminRows.length) { toast('暂无数据'); return; }
+  var rosterIds = {};
+  ROSTER.forEach(function (r) { rosterIds[r[1]] = true; });
+  var submitted = {};
+  adminRows.forEach(function (r) {
+    if (rosterIds[r.student_id] && !submitted[r.student_id]) submitted[r.student_id] = r;
+  });
+
+  var lines = [['姓名', '学号', '确认状态', '异议说明', '8选7所选（7人）', '提交时间'].join(',')];
+  ROSTER.forEach(function (r) {
+    var row = submitted[r[1]];
+    var voted = row && Array.isArray(row.vote_seven) ? row.vote_seven.map(nameOf).join('、') : '';
+    var when = row ? (row.updated_at || row.created_at) : '';
+    var d = when ? new Date(when) : null;
+    lines.push([
+      r[0], r[1],
+      row ? (row.confirm_status === 'dispute' ? '有异议' : '已确认') : '未提交',
+      row && row.dispute_text ? row.dispute_text : '',
+      voted,
+      d && !isNaN(d) ? d.toLocaleString('zh-CN') : ''
+    ].map(function (v) {
+      v = String(v == null ? '' : v);
+      return '"' + v.replace(/"/g, '""') + '"';
+    }).join(','));
+  });
+
+  // BOM：让 Excel 正确识别 UTF-8
+  var blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '综测评选确认_' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+}
+</script>
+</body>
+</html>
